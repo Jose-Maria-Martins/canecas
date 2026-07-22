@@ -22,7 +22,7 @@ export { PubAggregatorDO, DemoSimulatorDO };
 
 const AI_MODEL = "@cf/llava-hf/llava-1.5-7b-hf";
 const RATE_PROMPT =
-  "Look at this photo. If there is no beer (glass, mug, can, or bottle) visible, respond with exactly -1. Otherwise, rate how appealing the beer looks from 0 (awful) to 5 (amazing). Respond with ONLY a number.";
+  "Look at this image carefully. Step 1: Decide if there is beer visible — beer in a glass, mug, pint, can, or bottle counts; wine, cocktails, soda, water, or no drink do not count. Step 2: If NO beer is visible, output exactly: -1. If beer IS visible, output a single number from 0 to 5 rating how good the pour/presentation looks (0 = terrible, 5 = amazing). Output ONLY the number, nothing else — no words, no explanation, no punctuation.";
 
 const app = new Hono<{ Bindings: Env }>();
 

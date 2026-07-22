@@ -33,12 +33,6 @@ export function PhotoCaptureDialog({ pub, onClose, onPhoto, onRated }: Props) {
     return () => stream?.getTracks().forEach((track) => track.stop());
   }, [stream]);
 
-  useEffect(() => {
-    return () => {
-      if (preview) URL.revokeObjectURL(preview);
-    };
-  }, [preview]);
-
   async function startCamera() {
     setError(null);
     setPhase("camera");
@@ -93,6 +87,10 @@ export function PhotoCaptureDialog({ pub, onClose, onPhoto, onRated }: Props) {
     setError(null);
     setPhase("uploading");
 
+    // Show the pint immediately regardless of upload outcome — a fresh object URL
+    // (not `preview`) so it isn't revoked when this dialog unmounts.
+    onPhoto(pub.id, URL.createObjectURL(photo));
+
     try {
       const file = new File([photo], "caneca.jpg", { type: "image/jpeg" });
       const response = await api.submitPhoto({
@@ -114,7 +112,7 @@ export function PhotoCaptureDialog({ pub, onClose, onPhoto, onRated }: Props) {
       try {
         const submission = await api.getSubmission(id);
         if (submission.rating !== null) {
-          onPhoto(pub.id, `/api/uploads/${encodeURIComponent(id)}/image`);
+          if (preview) onPhoto(pub.id, preview);
           setRating(submission.rating);
           setPhase("done");
           onRated(submission.rating);

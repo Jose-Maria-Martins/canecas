@@ -27,7 +27,7 @@ export function SubmissionMap({ submissions }: SubmissionMapProps) {
         <Marker
           key={submission.submissionId}
           position={[submission.latitude, submission.longitude]}
-          icon={scoreIcon(submission.score)}
+          icon={beerIcon(submission)}
         >
           <Popup minWidth={230} maxWidth={280}>
             <article className="pint-popup">
@@ -77,14 +77,26 @@ function FitSubmissions({ submissions }: SubmissionMapProps) {
   return null;
 }
 
-function scoreIcon(score: number) {
+function beerIcon(submission: MapSubmission) {
+  const src = escapeHtml(submission.imageUrl);
   return divIcon({
-    className: "score-marker-wrap",
-    html: `<span class="score-marker"><b>${score.toFixed(1)}</b></span>`,
+    className: "beer-marker-wrap",
+    html: `<span class="beer-marker">
+        <span class="beer-marker-photo"><img src="${src}" alt="" loading="lazy" /></span>
+        <b class="beer-marker-score">${submission.score.toFixed(1)}</b>
+      </span>`,
     iconAnchor: [24, 48],
     iconSize: [48, 48],
-    popupAnchor: [0, -44],
+    popupAnchor: [0, -46],
   });
+}
+
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/"/g, "&quot;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
 }
 
 function formatDate(timestamp: number): string {

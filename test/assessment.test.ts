@@ -43,6 +43,28 @@ describe("readBodyWithLimit", () => {
 });
 
 describe("parseAssessmentResponse", () => {
+  it("computes the beer score from independent visual grades", () => {
+    expect(
+      parseAssessmentResponse({
+        response: JSON.stringify({
+          isImage: true,
+          isBeer: true,
+          head: "excellent",
+          pour: "good",
+          glass: "fair",
+          colour: "excellent",
+          presentation: "good",
+          reason: "A bright pint with a strong head in an ordinary glass.",
+        }),
+      }),
+    ).toEqual({
+      isImage: true,
+      isBeer: true,
+      score: 3.9,
+      reason: "A bright pint with a strong head in an ordinary glass.",
+    });
+  });
+
   it("normalizes a valid beer score", () => {
     expect(
       parseAssessmentResponse({

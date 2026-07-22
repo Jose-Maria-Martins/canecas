@@ -41,6 +41,11 @@ export class PhotoAssessmentWorkflow extends WorkflowEntrypoint<Env, PhotoWorkfl
               {
                 messages: [
                   {
+                    role: "system",
+                    content:
+                      "You are a strict visual beer judge. Base every grade on the attached image and never use a default rating.",
+                  },
+                  {
                     role: "user",
                     content: [
                       { type: "text", text: prompt },
@@ -52,7 +57,7 @@ export class PhotoAssessmentWorkflow extends WorkflowEntrypoint<Env, PhotoWorkfl
                   },
                 ],
                 max_tokens: 180,
-                temperature: 0,
+                temperature: 0.2,
               },
               { returnRawResponse: true },
             );

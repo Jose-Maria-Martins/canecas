@@ -1,7 +1,7 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "canecas",
-  "main": "src/index.ts",
+  "main": "worker/index.ts",
   "compatibility_date": "2026-07-22",
   "observability": {
     "enabled": true
@@ -31,10 +31,11 @@
       "bucket_name": "caneca-photos"
     }
   ],
-  // Gamification slice (TASKS.md "Sub-goal: Gamification slice detail design").
-  // Scoped to unblock that migration only — main still points at src/index.ts;
-  // reconciling that against worker/index.ts's D1/Queue backend is a separate,
-  // bigger decision left to the Manager/Architect.
+  // D1 config for the gamification slice (TASKS.md "Sub-goal: Gamification slice detail design").
+  // main now points at worker/index.ts (uses env.DB throughout), so this binding is required, not
+  // optional — a teammate's commit removed it while main still pointed at src/index.ts, reporting
+  // that this database_id failed deploy validation. Unverified in this session: confirm the D1
+  // database behind this id actually exists before deploying (`wrangler d1 list`), or re-provision it.
   "d1_databases": [
     {
       "binding": "DB",
