@@ -1,0 +1,81 @@
+{
+  // Caneca — single Workers project serving the built SPA (static assets) + API.
+  // TASKS.md §1/§9. Deviation from the report's main="src/index.ts": the Worker
+  // lives under worker/ so it never tangles with the Vite src/ tree.
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "caneca",
+  "main": "worker/index.ts",
+  "compatibility_date": "2025-07-01",
+  "compatibility_flags": ["nodejs_compat"],
+
+  // Built SPA is served by the same Worker; API routes take precedence in code.
+  "assets": {
+    "directory": "./dist",
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application"
+  },
+
+  "observability": { "enabled": true },
+
+  // Non-secret config. Secrets (TURNSTILE_SECRET, SESSION_HMAC_KEY, magic-link
+  // key) go through `wrangler secret put` — never here (TASKS.md §11).
+  "vars": {
+    "APP_ORIGIN": "https://caneca.dev",
+    "AI_OFF": "0",
+    "DEV_AUTH": "0", // devEmail bypass — MUST stay "0" in production (TASKS.md §11 open TODO)
+    "TURNSTILE_SITE_KEY": "1x00000000000000000000AA"
+  },
+
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "caneca_db",
+      "database_id": "00000000-0000-0000-0000-000000000000",
+      "migrations_dir": "migrations"
+    }
+  ],
+
+  "kv_namespaces": [
+    { "binding": "SESSIONS", "id": "sessions_placeholder_id" },
+    { "binding": "GLOBAL_CACHE", "id": "global_cache_placeholder_id" }
+  ],
+
+  "r2_buckets": [{ "binding": "BEER_PHOTOS", "bucket_name": "caneca-photos" }],
+
+  "queues": {
+    "producers": [{ "binding": "PHOTO_INFER", "queue": "photo-infer" }],
+    "consumers": [
+      {
+        "queue": "photo-infer",
+        "max_batch_size": 5,
+        "max_batch_timeout": 2,
+        "max_retries": 3,
+        "dead_letter_queue": "photo-infer-dlq"
+      }
+    ]
+  },
+
+  "ai": { "binding": "AI" },
+
+  "durable_objects": {
+    "bindings": [
+      { "name": "PUB_AGGREGATOR", "class_name": "PubAggregatorDO" },
+      { "name": "DEMO_SIMULATOR", "class_name": "DemoSimulatorDO" }
+    ]
+  },
+
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": ["PubAggregatorDO", "DemoSimulatorDO"]
+    }
+  ],
+
+  // Cloudflare Email Sending binding (magic-link delivery, TASKS.md §7).
+  "send_email": [{ "name": "EMAIL", "destination_address": "noreply@caneca.dev" }],
+
+  // Cron: daily BeerReal prompt (17:00 UTC) + weekly challenge rotation (Mon 00:00).
+  "triggers": {
+    "crons": ["0 17 * * *", "0 0 * * 1"]
+  }
+}

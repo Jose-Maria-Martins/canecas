@@ -1,0 +1,18 @@
+# Worker secrets for local `wrangler dev`. Copy to `.dev.vars` (gitignored) and
+# fill in. In production these are set with `wrangler secret put <NAME>` — never
+# committed and never in wrangler.jsonc (TASKS.md §11).
+
+# Turnstile secret key. Test secret that always passes:
+#   1x0000000000000000000000000000000AA
+# Leave unset locally to accept the offline "mock-turnstile-ok" token.
+TURNSTILE_SECRET=
+
+# HMAC key for signing (reserved; sessions currently use opaque KV tokens).
+SESSION_HMAC_KEY=
+
+# Shared secret gating POST /api/admin/demo/:action (start|stop|tick).
+ADMIN_SECRET=
+
+# Optional overrides (usually set via wrangler.jsonc vars instead):
+# AI_OFF=1        # stub AI ratings 2.0-4.0 when Workers AI is unavailable
+# DEV_AUTH=0      # keep 0 — never enable the devEmail bypass in production
