@@ -107,13 +107,10 @@ export function weightedScore(meanRating: number, ratingCount: number, globalMea
   return (v / (v + m)) * meanRating + (m / (v + m)) * globalMean;
 }
 
-export function xpForLevel(level: number): number {
-  return 50 * level * (level - 1);
-}
+// Flat curve, chosen over a tuned RPG progression so it's trivial to explain
+// during a 3-hour build (Gamification slice Round 2 revision).
 export function levelFromXp(xp: number): number {
-  let level = 1;
-  while (xpForLevel(level + 1) <= xp) level++;
-  return level;
+  return Math.floor(xp / 100) + 1;
 }
 
 /** Add XP to a user, recompute level, persist; returns the new totals. */

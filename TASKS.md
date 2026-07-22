@@ -706,3 +706,173 @@ than acted on unilaterally:
    across two different commits).
 No history rewrite, force-push, or any other destructive action has been taken or proposed — flagging
 only, per standing policy on git actions of this kind.
+
+## Sub-goal: Gamification slice detail design (this user owns this personally)
+
+Scope: the social/gamification half of Track B specifically — XP/levels, challenges, buddies, BeerReal,
+plus stretch additions below. NOT the pub-data-seeding/rating-aggregator half of Track B (assumed to be
+someone else's/unspecified — flagged as an assumption, not confirmed).
+
+**Confirmed requirements (from direct Q&A with the user):**
+- Time available: ~2+ hours — room for core mechanics plus 1-2 stretch features.
+- XP sources (all confirmed in scope): beer photo submissions, completing challenges, BeerReal
+  responses, adding/accepting a buddy, visiting a pub for the first time (first time *this user*
+  visits a *given* pub — distinct from the "first to rate a pub ever" stretch idea below).
+- Leveling curve: user has no preference — needs a concrete, simple formula from architect. Bias
+  toward something trivial to compute and explain (flat or simple arithmetic progression), not an
+  exponential/tuned RPG curve — this is a 3-hour build, not a live-service game economy.
+- Buddy adding: shareable invite link/code (not search, not QR). Open design question for architect:
+  does opening a personalized invite link immediately create an accepted buddy relationship (single
+  tap, since receiving a personal link already implies mutual intent), or does it create a `pending`
+  row still requiring an explicit accept tap from the recipient? Recommend the former for build-time
+  reasons, but flag the tradeoff explicitly.
+- BeerReal response window: a daily deadline (e.g. respond any time before midnight), not a tight
+  BeReal-style few-minute window — chosen specifically because reaching a pub takes real travel time,
+  unlike the original app's "anything, anywhere, instantly" premise.
+- Leaderboard: global XP leaderboard only (no buddy-scoped leaderboard) — in scope.
+
+**Stretch features proposed by the Manager, user given a chance to veto, proceeding absent objection:**
+- Badges/achievements: a `badges` + `user_badges` table, unlocked by simple queries on existing events
+  (e.g. 5 distinct pubs visited, first BeerReal, first buddy, a perfect 5.0 AI rating). Chosen because
+  these fire live during a demo, unlike streak-style mechanics that need real multi-day history to be
+  visible at all within a 3-hour event.
+- Live leaderboard reusing existing real-time infra: open design question for architect — is a
+  single global "LeaderboardDO" (one DO instance, broadcasts to all its own connected sockets) the
+  right shape here, or is polling `/api/leaderboard` lower-risk given remaining time? Important
+  distinction from the earlier-rejected per-user `FeedRoomDO` idea: that design failed because it
+  needed DO-to-DO fan-out across arbitrary per-user buddy lists, which Cloudflare has no native
+  mechanism for. A single global leaderboard DO broadcasting to its own listeners does **not** have
+  that problem — it's structurally like `PubAggregatorDO`, not like the rejected buddy-feed design.
+  Don't reject it by pattern-matching to the earlier decision; evaluate it on its own shape.
+- Small XP bonus for being the first person ever to submit a rated photo for a given pub (distinct
+  from "visiting a pub for the first time" above, which is per-user; this one is global, per-pub).
+
+**Needs a concrete design from architect (beyond what's already in the shared schema):**
+- Exact leveling formula and XP amounts per source.
+- Challenge schema needs a generic way to compute progress/completion (e.g. `criteria_type` +
+  `target_count` columns on `challenges`, computed via a query against existing tables like
+  `submissions`/`beerreal_responses`/`buddies`) rather than one-off custom code per challenge, since
+  challenge content itself (the actual daily/weekly challenge text) will change over the event.
+- Buddy-invite-link mechanism: how a code/link is generated, stored, and consumed (new table likely
+  needed, e.g. `buddy_invites`), and the accept-flow question above.
+- Badge criteria representation and the specific starter badge list.
+- Leaderboard mechanism (DO-broadcast vs. polling) and the `/api/leaderboard` contract either way.
+- BeerReal deadline mechanics: exact cron/expiry design consistent with the daily-deadline decision.
+
+This all builds on top of (not replacing) the already-established shared schema in the Design
+Report/spec.md (`buddies.status`, `challenges`, `challenge_completions`, `beerreal_prompts`,
+`beerreal_responses`, `activities`, `users.xp`/`level`, `PubAggregatorDO`/WebSocket precedent).
+
+### Architect's design (fresh session ses_0751e0d69ffeq1L61OsyXSjgOr)
+
+- **Leveling**: `level = floor(total_xp / 100) + 1`. XP awards: photo submission 10, challenge
+  completion = `challenges.xp` (no stacking with a flat amount), BeerReal response 20, buddy link
+  consumed 15 (both sides), first-ever-visit to a given pub (per-user) 30, first-ever rating on a given
+  pub (global, per-pub) 50.
+- **Challenges**: `ALTER TABLE challenges ADD criteria_type TEXT CHECK(...), target_count INTEGER
+  DEFAULT 1, meta JSON`. Generic progress = a query per `criteria_type` against `submissions` /
+  `beerreal_responses` / `buddies`, evaluated after every write to the relevant table; on
+  achieved-and-not-yet-completed, insert `challenge_completions`, award XP, write an `activities` row.
+  5 example rows given (daily check-in, daily BeerReal, weekly 5-distinct-pubs, weekly add-a-buddy,
+  weekly perfect-rating).
+- **Buddy invites**: new `buddy_invites(code PK, inviter_id, recipient_id NULL, created_at,
+  accepted_at)`. `POST /api/buddies/invite` → `{url}`. `POST /api/buddies/accept {code}` →
+  **immediately creates an accepted `buddies` row** (both directions), sets `recipient_id`/
+  `accepted_at`, awards 15 XP each, writes `activities`. Decision: single-tap accept, not a separate
+  pending-then-confirm step — reasoning given: clicking a personally-shared link already implies
+  mutual intent, unlike a unilateral add-by-identifier.
+- **Badges**: `badges(id, name, description, criteria_type, target_count)` +
+  `user_badges(user_id, badge_id, awarded_at)`. Starter set of 6: `first_beer`, `explorer`
+  (5 distinct pubs), `beerreal_rookie`, `social_drinker`, `perfect_pour`, `trailblazer`
+  (first pub contributor). Same generic-counter evaluation as challenges.
+- **Leaderboard**: simple polling, no dedicated DO. `GET /api/leaderboard?limit=20` →
+  `{rows:[{rank,userId,name,xp,level}], generatedAt}`. Chosen over a broadcast DO given XP changes
+  are infrequent enough that a several-second poll is indistinguishable from push, for less build risk.
+- **BeerReal deadline**: daily cron 00:00 UTC inserts the prompt; a response is valid while
+  `now < prompt.created_at + 24h`; late submits get `409`. A missed prompt just has no response row,
+  nothing else tracked.
+- **New API surface**: `POST /api/buddies/invite`, `POST /api/buddies/accept`,
+  `GET /api/leaderboard`, `GET /api/challenge`, `POST /api/challenge`, `GET /api/me` — all session-cookie
+  auth'd, same `{"error","message"}` error shape as the rest of the app.
+- **Test plan**: xp boundary test, generic challenge-evaluator test, invite idempotency/self-accept
+  test, leaderboard ordering test, badge-awarded-once test.
+- **2-hour sequencing**: migration (0:15) → XP helper + leaderboard (0:20) → buddy invite endpoints
+  (0:25) → generic challenge/badge evaluator wired into existing handlers (0:30) → seed badges/example
+  challenges (0:15) → tests + smoke + deploy (0:15).
+- **Risks flagged by architect**: generic evaluator too slow/complex → hard-code today's challenges
+  instead; buddy-invite race conditions → fall back to a manual buddy-entry UI; badge UI not ready →
+  ship backend-only; leaderboard poll cost → raise cache TTL or cut to top-10.
+
+### Manager's own flags, sent to reviewers alongside the design (not yet verified — don't assume handled)
+
+1. **Buddy-invite consumption isn't fully specified against two failure modes**: (a) can the *same*
+   code be consumed by more than one distinct recipient (design shows `recipient_id` as a single
+   nullable field, implying no, but the accept handler's exact guard — `WHERE recipient_id IS NULL` —
+   isn't spelled out); (b) a race where two simultaneous `accept` calls on the same still-unconsumed
+   code both succeed before either write lands (classic check-then-set TOCTOU, same shape as the
+   earlier KV-throttle non-atomicity finding, but here it's D1 rows, not just a soft-cap counter).
+2. **Possible XP-farming vector**: nothing in the design says the accept handler checks whether the
+   two users are *already* buddies before creating a new relationship + awarding 15 XP again — could
+   two (possibly colluding) users generate/accept repeated invite cycles between each other for
+   unlimited XP?
+3. **First-ever-pub-rating bonus (50 XP) has the same race shape as #1(b)**: two near-simultaneous
+   first submissions for a brand-new pub could both read "no ratings yet" before either write lands,
+   both claiming the "first" bonus.
+4. **Consent-principle continuity check**: Round 2's `buddies.status` addition existed specifically so
+   one user can't unilaterally start tracking another's real-time physical check-ins without consent.
+   Confirm "click a personally-shared link = immediate accept" genuinely preserves that (both sides
+   still had to take an affirmative action: generate-and-share, then click) rather than quietly
+   reintroducing a one-sided path — asking for explicit confirmation, not assuming it by analogy.
+5. Sanity-check only, not expected to be an issue: confirm the challenge/badge evaluator queries
+   (plain SQL against small tables) don't reintroduce the earlier inline-latency mistake from the AI
+   pipeline (that one was blocking on a slow model call; this is fast SQL, so likely fine, but worth a
+   fresh set of eyes given it's the same "inline vs. async" theme recurring in this project).
+
+### Round 1 verdicts on the gamification design
+
+- **Challenger (ses_07518f652ffeh0CaCa0CUHsejj): FAIL.** Found something the Manager's own flags
+  missed and confirmed #1-3: the evaluator as designed runs "after every write" to `submissions`,
+  which means it runs **in the synchronous photo-upload HTTP handler** — but per the already-finalized
+  AI pipeline, `rating` stays NULL until the async Queue consumer finishes, and the row is deleted
+  entirely if the AI rejects the photo (no beer detected). So `perfect_rating`/`distinct_pubs` criteria
+  would evaluate against submissions that aren't rated yet, or that get deleted moments later. Also:
+  building a fully generic/dynamic SQL query engine for arbitrary `criteria_type`s isn't realistic in
+  the timeboxed 30 minutes allotted — recommends a hardcoded `switch(criteria_type)` with explicit
+  parameterized queries for the ~5 known types instead. Gave concrete atomic-SQL fixes for Manager's
+  flags #1-3: invite consumption via `UPDATE buddy_invites SET recipient_id=? WHERE code=? AND
+  recipient_id IS NULL` (only award XP if rows-affected > 0); XP-farming via
+  `INSERT INTO buddies(...) ON CONFLICT DO NOTHING` (only award XP if a row was actually inserted);
+  first-pub-rating race via an atomic increment/check on `pub_scores.rating_count` inside the Queue
+  consumer. On flag #4 (consent continuity): considers it satisfied as designed — both sides still
+  took an affirmative action (generate-and-share, then click), not a unilateral path. Simple-polling
+  leaderboard choice: confirmed correct given remaining time budget.
+- **Security: no usable verdict — returned completely empty output twice in a row**, on two separate
+  fresh sessions (`ses_07518d56dffe9MXVOkv2DBVQo0`, `ses_0751269e6ffe5msBvJsIGOOZMe`), same prompt both
+  times. Per the malformed-output policy: treated as WARN (not guessed as PASS), not retried a 3rd time
+  in a row on the identical ask, and flagged to the user directly since it recurred. Will give security
+  one more normal attempt on the *revised* design next round (a different artifact, not a 3rd identical
+  retry) rather than writing it off after two failures on one specific call.
+- **Aggregate: FAIL** (challenger alone is enough — worst wins). Routing consolidated feedback back to
+  architect (resuming ses_0751e0d69ffeq1L61OsyXSjgOr) for revision. Revision count: 1.
+
+### Round 2: architect's revision
+
+Resolved all 3 required items: evaluator moved to run only from the Queue consumer for photo-derived
+criteria (`submission_count`/`distinct_pubs`/`perfect_rating`/`first_pub_contributor`), inline for
+`beerreal_response`/`buddy_added`; generic query engine replaced with a hardcoded switch and explicit
+parameterized queries per criteria type; all 3 race/farming issues fixed atomically — invite consumption
+via conditional `UPDATE ... WHERE recipient_id IS NULL` + checking `changes()`, buddy-pair creation via
+`INSERT ... ON CONFLICT DO NOTHING` gating the XP award on rows actually inserted, first-pub-rating via
+a new `pub_first_contributors(pub_id PK, user_id, awarded_at)` table whose PK uniqueness makes the
+award exactly-once. Added `buddies.accepted_at` column (needed for the `buddy_added` evaluator's date
+range filter). Timeline simplified (~10 min saved vs. the generic-engine version).
+
+**New issue the Manager caught while reviewing this revision (not yet verified by reviewers):** the
+`buddy_added` evaluator query is `WHERE (user_id = ?1 OR buddy_id = ?1)` — but since every accepted
+buddy relationship already writes mirrored rows (both `(A,B)` and `(B,A)`), that `OR` clause matches
+*both* mirrored rows for the same real relationship, double-counting. A challenge requiring "add 2
+buddies" would falsely complete after only 1 real addition. Fix should just be `WHERE user_id = ?1`
+(the mirrored-insert design already guarantees a row with `user_id = ?1` exists for every relationship
+`?1` is part of, so the `OR` is redundant and harmful). Sending to challenger + security to confirm
+and fold in if this round otherwise passes, rather than looping back to architect a 2nd time for one
+query clause.

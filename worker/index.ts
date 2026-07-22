@@ -316,6 +316,88 @@ app.get("/api/beerreal/active", async (c) => {
   return json({ ...row, responded });
 });
 
+// ---- buddies --------------------------------------------------------------
+app.post("/api/buddies/invite", async (c) => {
+  const user = await getSessionUser(c.req.raw, c.env);
+  if (!user) return error("Unauthorized", "Sign in", 401);
+  const code = ulid();
+  await c.env.DB.prepare(
+    "INSERT INTO buddy_invites (code, inviter_id, recipient_id, created_at, accepted_at) VALUES (?, ?, NULL, ?, NULL)",
+  )
+    .bind(code, user.id, Date.now())
+    .run();
+  return json({ code, url: `${c.env.APP_ORIGIN}/buddies/accept?code=${code}` });
+});
+
+app.post("/api/buddies/accept", async (c) => {
+  const user = await getSessionUser(c.req.raw, c.env);
+  if (!user) return error("Unauthorized", "Sign in", 401);
+  const { code } = await c.req.json<{ code?: string }>().catch(() => ({}) as { code?: string });
+  if (!code) return error("BadRequest", "Missing code", 400);
+
+  const invite = await c.env.DB.prepare("SELECT inviter_id FROM buddy_invites WHERE code = ?")
+    .bind(code)
+    .first<{ inviter_id: string }>();
+  if (!invite) return error("NotFound", "Invalid invite code", 404);
+  if (invite.inviter_id === user.id) return error("BadRequest", "Can't accept your own invite", 400);
+
+  const now = Date.now();
+  // Conditional UPDATE is the atomicity fix from Round 1 review: two
+  // simultaneous accepts on the same code can't both win the race, because
+  // only the first one still finds recipient_id IS NULL.
+  const claim = await c.env.DB.prepare(
+    "UPDATE buddy_invites SET recipient_id = ?, accepted_at = ? WHERE code = ? AND recipient_id IS NULL",
+  )
+    .bind(user.id, now, code)
+    .run();
+  if (claim.meta.changes === 0) return error("AlreadyUsed", "That invite has already been used", 409);
+
+  const inviterId = invite.inviter_id;
+  // Mirrored rows; ON CONFLICT DO NOTHING + gating XP on rows actually
+  // inserted closes the repeated-accept-cycle XP-farming vector (Round 1 fix).
+  const a = await c.env.DB.prepare(
+    "INSERT INTO buddies (user_id, buddy_id, status, accepted_at) VALUES (?, ?, 'accepted', ?) ON CONFLICT DO NOTHING",
+  )
+    .bind(inviterId, user.id, now)
+    .run();
+  const b = await c.env.DB.prepare(
+    "INSERT INTO buddies (user_id, buddy_id, status, accepted_at) VALUES (?, ?, 'accepted', ?) ON CONFLICT DO NOTHING",
+  )
+    .bind(user.id, inviterId, now)
+    .run();
+
+  if (a.meta.changes > 0 && b.meta.changes > 0) {
+    await grantXp(c.env, inviterId, 15);
+    await grantXp(c.env, user.id, 15);
+    const [inviter, recipient] = await Promise.all([
+      c.env.DB.prepare("SELECT display_name FROM users WHERE id = ?").bind(inviterId).first<{ display_name: string }>(),
+      c.env.DB.prepare("SELECT display_name FROM users WHERE id = ?").bind(user.id).first<{ display_name: string }>(),
+    ]);
+    if (inviter) {
+      await writeActivity(c.env, {
+        userId: inviterId,
+        displayName: inviter.display_name,
+        type: "buddy_added",
+        targetId: user.id,
+        targetName: recipient?.display_name ?? null,
+      });
+    }
+    if (recipient) {
+      await writeActivity(c.env, {
+        userId: user.id,
+        displayName: recipient.display_name,
+        type: "buddy_added",
+        targetId: inviterId,
+        targetName: inviter?.display_name ?? null,
+      });
+    }
+    await evaluateChallenges(c.env, inviterId, "buddy_added");
+    await evaluateChallenges(c.env, user.id, "buddy_added");
+  }
+
+  return json({ ok: true, buddy_id: inviterId });
+});
+
 // admin: kick the demo simulator (shared-secret gated — TASKS.md open TODO #2)
 app.post("/api/admin/demo/:action", async (c) => {
   if (!c.env.ADMIN_SECRET || c.req.header("x-admin-secret") !== c.env.ADMIN_SECRET) {
@@ -407,14 +489,20 @@ export default {
           }
         }
 
-        // BeerReal fulfilment → response row + daily challenge credit
+        // Challenge/badge evaluation runs only here — after rating is set, never
+        // inline in POST /api/photos, never for a rejected/deleted submission
+        // (Gamification slice Round 2 revision; this replaced an unconditional
+        // hardcoded chl_daily_first credit that only fired on BeerReal submits).
+        await evaluateChallenges(env, userId, "submission_count");
+        await awardBadges(env, userId, "submission_count");
+
+        // BeerReal fulfilment → response row
         if (promptId) {
           await env.DB.prepare(
             "INSERT OR IGNORE INTO beerreal_responses (id, prompt_id, user_id, submission_id, created_at) VALUES (?, ?, ?, ?, ?)",
           )
             .bind(ulid(), promptId, userId, submissionId, Date.now())
             .run();
-          await completeChallenge(env, userId, "chl_daily_first");
         }
 
         msg.ack();
@@ -457,14 +545,103 @@ export default {
 };
 
 async function completeChallenge(env: Env, userId: string, challengeId: string): Promise<void> {
-  const chl = await env.DB.prepare("SELECT xp FROM challenges WHERE id = ?").bind(challengeId).first<{ xp: number }>();
+  const chl = await env.DB.prepare("SELECT title, xp FROM challenges WHERE id = ?")
+    .bind(challengeId)
+    .first<{ title: string; xp: number }>();
   if (!chl) return;
   const inserted = await env.DB.prepare(
     "INSERT OR IGNORE INTO challenge_completions (challenge_id, user_id, completed_at) VALUES (?, ?, ?)",
   )
     .bind(challengeId, userId, Date.now())
     .run();
-  if (inserted.meta.changes > 0) await grantXp(env, userId, chl.xp);
+  if (inserted.meta.changes === 0) return; // already completed
+  await grantXp(env, userId, chl.xp);
+  const u = await env.DB.prepare("SELECT display_name FROM users WHERE id = ?").bind(userId).first<{ display_name: string }>();
+  if (u) {
+    await writeActivity(env, { userId, displayName: u.display_name, type: "challenge", targetId: challengeId, targetName: chl.title });
+  }
+}
+
+// Hardcoded switch over the ~5 known criteria types instead of a fully dynamic
+// query engine — the generic-engine version was rejected in Round 1 review as
+// too slow to build in the time budget. Shared by both challenges and badges.
+async function criteriaCount(
+  env: Env,
+  userId: string,
+  criteriaType: string,
+  windowStart: number,
+  windowEnd: number,
+): Promise<number> {
+  switch (criteriaType) {
+    case "submission_count": {
+      const row = await env.DB.prepare(
+        "SELECT COUNT(*) AS n FROM submissions WHERE user_id = ? AND rating IS NOT NULL AND created_at BETWEEN ? AND ?",
+      )
+        .bind(userId, windowStart, windowEnd)
+        .first<{ n: number }>();
+      return row?.n ?? 0;
+    }
+    case "distinct_pubs": {
+      const row = await env.DB.prepare(
+        "SELECT COUNT(DISTINCT pub_id) AS n FROM submissions WHERE user_id = ? AND rating IS NOT NULL AND created_at BETWEEN ? AND ?",
+      )
+        .bind(userId, windowStart, windowEnd)
+        .first<{ n: number }>();
+      return row?.n ?? 0;
+    }
+    case "buddy_added": {
+      // Fix confirmed after Round 2: buddy rows are mirrored ((A,B) and (B,A))
+      // for every accepted relationship, so matching buddy_id too double-counts
+      // a single relationship as two. user_id alone already sees every
+      // relationship ?1 is part of, so that's the whole count.
+      const row = await env.DB.prepare(
+        "SELECT COUNT(*) AS n FROM buddies WHERE user_id = ? AND status = 'accepted' AND accepted_at BETWEEN ? AND ?",
+      )
+        .bind(userId, windowStart, windowEnd)
+        .first<{ n: number }>();
+      return row?.n ?? 0;
+    }
+    default:
+      return 0;
+  }
+}
+
+async function evaluateChallenges(env: Env, userId: string, criteriaType: string): Promise<void> {
+  const now = Date.now();
+  const { results: chls } = await env.DB.prepare(
+    "SELECT id, target_count, starts_at, ends_at FROM challenges WHERE criteria_type = ? AND starts_at <= ? AND ends_at >= ?",
+  )
+    .bind(criteriaType, now, now)
+    .all<{ id: string; target_count: number; starts_at: number; ends_at: number }>();
+  for (const chl of chls) {
+    const done = await env.DB.prepare("SELECT 1 FROM challenge_completions WHERE challenge_id = ? AND user_id = ?")
+      .bind(chl.id, userId)
+      .first();
+    if (done) continue;
+    const count = await criteriaCount(env, userId, criteriaType, chl.starts_at, chl.ends_at);
+    if (count >= chl.target_count) await completeChallenge(env, userId, chl.id);
+  }
+}
+
+async function awardBadges(env: Env, userId: string, criteriaType: string): Promise<void> {
+  const { results: badges } = await env.DB.prepare("SELECT id, name, target_count FROM badges WHERE criteria_type = ?")
+    .bind(criteriaType)
+    .all<{ id: string; name: string; target_count: number }>();
+  for (const b of badges) {
+    const already = await env.DB.prepare("SELECT 1 FROM user_badges WHERE user_id = ? AND badge_id = ?")
+      .bind(userId, b.id)
+      .first();
+    if (already) continue;
+    const count = await criteriaCount(env, userId, criteriaType, 0, Date.now()); // badges aren't time-windowed
+    if (count < b.target_count) continue;
+    const inserted = await env.DB.prepare("INSERT OR IGNORE INTO user_badges (user_id, badge_id, awarded_at) VALUES (?, ?, ?)")
+      .bind(userId, b.id, Date.now())
+      .run();
+    if (inserted.meta.changes > 0) {
+      const u = await env.DB.prepare("SELECT display_name FROM users WHERE id = ?").bind(userId).first<{ display_name: string }>();
+      if (u) await writeActivity(env, { userId, displayName: u.display_name, type: "badge", targetId: b.id, targetName: b.name });
+    }
+  }
 }
 
 // ---- email --------------------------------------------------------------

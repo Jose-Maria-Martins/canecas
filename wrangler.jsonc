@@ -31,6 +31,18 @@
       "bucket_name": "caneca-photos"
     }
   ],
+  // Gamification slice (TASKS.md "Sub-goal: Gamification slice detail design").
+  // Scoped to unblock that migration only — main still points at src/index.ts;
+  // reconciling that against worker/index.ts's D1/Queue backend is a separate,
+  // bigger decision left to the Manager/Architect.
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "caneca_db",
+      "database_id": "35d2a0de-f96a-4e1d-85c8-7cbcff549066",
+      "migrations_dir": "migrations"
+    }
+  ],
   "workflows": [
     {
       "name": "canecas-photo-assessment",
