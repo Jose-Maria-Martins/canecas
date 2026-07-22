@@ -230,11 +230,14 @@ Email domain verified + Turnstile keys issued; pub seed JSON generated from Over
 
 ## Sessions
 
-- architect: ses_0756b992effeC13yH46cbhdh8M (resumed 2x)
-- challenger: ses_075686366ffe74AoN0gzSMkjSA (resumed 2x)
-- security: ses_0756841eaffepajdDgo7589tRQ (resumed 2x)
-- engineer: not started
-- qa: not started
+- architect (main design thread): ses_0756b992effeC13yH46cbhdh8M (resumed 2x)
+- architect (spec.md packaging check, separate fresh thread): ses_07541559effeAr8FCb6MEs7OYW (resumed 0x)
+- challenger (main design thread): ses_075686366ffe74AoN0gzSMkjSA (resumed 2x)
+- challenger (spec.md packaging check, separate fresh thread): ses_0753c37dfffeuw7ntL7WT9U0zQ (resumed 0x)
+- security (main design thread): ses_0756841eaffepajdDgo7589tRQ (resumed 2x)
+- security (spec.md packaging check, separate fresh thread): ses_0753c291affelU1YANfQTpd6Yc (resumed 0x)
+- engineer: ses_07536a966ffeB24tknpazwTw92 (resumed 0x)
+- qa: ses_0752dc40cffeUfRyEr1MvTLj3n (resumed 0x)
 
 ## Log
 
@@ -629,3 +632,77 @@ header/structure adjustments needed now that it's a standalone document rather t
 
 This is engineer's and QA's first invocation on this project. Per Housekeeping above, engineer must
 also create `.gitignore` with at least a `TASKS.md` entry as part of this same invocation.
+
+### Verdicts on the spec.md packaging plan
+
+- Architect (fresh session): content is ready to commit as-is — strip only the outer chat-only fence
+  and the HANDOFF marker lines, everything else renders fine as a normal .md file.
+- Challenger (fresh): PASS, no revisions needed.
+- Security (fresh): **WARN** — marker content itself is clean (no secrets/credentials; the
+  `wrangler secret put` line is guidance text, not a leaked value). But it surfaced a real, separate
+  finding while checking git state, unrelated to the content itself:
+  - **`TASKS.md` is already tracked AND already pushed to `origin/main`, across 3 pre-existing commits**
+    (`d5ab470`, `c408c96`, `6a55f76` — all titled "feat: report beta"/variants, all touching only
+    TASKS.md). This happened outside this session — nothing in this conversation has run a commit or
+    push. Corrects the Housekeeping note's "no .gitignore exists yet" framing, which implied an empty
+    repo; the repo has history already.
+  - Practical effect: adding a `TASKS.md` entry to `.gitignore` now only stops *future* commits of it —
+    it's a no-op on the 3 already-pushed commits, whose content (including the Sessions/session-id
+    block) stays in shared origin/main history regardless.
+  - Those 3 commits also went directly to `main`, not a feature branch.
+  - Real fix for the historical commits would be either `git rm --cached TASKS.md` (safe, reversible,
+    but still needs a human commit — T3 blocks that for engineer) or, if fully purging it from history
+    is wanted, a history rewrite + force-push on `main` — explicitly a "genuinely destructive/irreversible
+    action on a shared branch" needing sign-off before anyone runs it, not something to route to
+    engineer as a routine fix.
+  - T2_GATE_REQUIRED: no, for spec.md/.gitignore creation as scoped (routine additive file ops). Flag
+    only if remediation of the historical-commit issue ends up needing the history-rewrite path.
+- Aggregate: WARN (security's content-scoped verdict is fine; the git-history finding is a separate,
+  out-of-band discovery, not a reason to fail this sub-task's own plan). Proceeding with spec.md +
+  forward-looking .gitignore creation now (safe, additive, doesn't foreclose any remediation choice).
+  Historical-commit question raised to the user directly rather than resolved automatically.
+
+### Engineer + QA results (both first invocation on this project)
+
+- **Engineer** (ses_07536a966ffeB24tknpazwTw92): created `spec.md` (verbatim per the marked content).
+  Ran only read-only git commands to investigate, no mutations. Found mid-task that commit `26d60de`
+  ("feat: map/frontend layer...", author Joana Azevedo — a full Vite/React/MapLibre Track-A scaffold,
+  34 files) had landed directly on `main` and was already pushed to origin, since the task started —
+  this already included its own correct `.gitignore` with a `TASKS.md` entry. Engineer had already
+  drafted its own `.gitignore` before noticing this; restored it to byte-identical match with the
+  already-pushed version rather than leaving a competing draft (verified via `git diff --exit-code`,
+  clean). Drafted a commit message for `spec.md` and recommended a feature branch, not `main`, given
+  `main` already has one direct-push incident today.
+- **QA** (ses_0752dc40cffeUfRyEr1MvTLj3n): independently byte-diffed `spec.md` against the marker
+  section of this file — identical (MD5 match, 253 lines/14893 bytes, no whitespace/newline drift).
+  Markdown structurally sound (balanced fences, sequential headings, no truncation/encoding issues).
+  `.gitignore`'s `TASKS.md` entry syntactically correct and confirmed via `git check-ignore --no-index`
+  (caveat: no practical effect while the file stays tracked — same limitation security already flagged
+  for the 3 pre-existing commits, now independently confirmed rather than taken on faith).
+  **Working tree is clean** — not because nothing happened, but because everything is already
+  committed AND pushed to `origin/main`:
+  - `26d60de` Joana Azevedo — the Track A scaffold (as Engineer found).
+  - `b06433d` ddacruz — message says "feat: spec.md" but the diff only touches `TASKS.md`.
+  - `3511322` ddacruz — also "feat: spec.md" (identical message to the commit above), this is the one
+    that actually adds `spec.md`.
+  None of these three commits were made by anything in this session — nothing here has git write
+  access, and Engineer/QA both confirm they ran read-only commands only. QA verdict: WARN (content
+  itself is fully correct; the git-provenance/process findings are what keep it off PASS).
+
+### Status: spec.md sub-task — content complete and verified; git-process findings need user input
+
+`spec.md` exists, is correct, and is (per QA) already on `origin/main`. Given the content has now been
+independently confirmed correct four separate times (architect's plan check, challenger's PASS, and now
+Engineer's + QA's own byte-level verification), not running a further content-focused
+challenger/security pass on the exact same unchanged text — there's no new content-signal left to
+review. What's actually new and unresolved is the git situation, raised directly with the user rather
+than acted on unilaterally:
+1. A second direct-to-`main` push (Joana Azevedo's Track A scaffold), following the same pattern as the
+   original TASKS.md commits.
+2. Two more direct-to-`main` commits (under the user's own local identity, `ddacruz`) landed the
+   TASKS.md sub-task text and `spec.md` itself — bypassing the standing "draft a commit message, never
+   commit/push yourself" instruction this Manager operates under. Nothing in this session ran them.
+3. Minor hygiene: `b06433d`'s message doesn't match its diff (duplicate "feat: spec.md" message reused
+   across two different commits).
+No history rewrite, force-push, or any other destructive action has been taken or proposed — flagging
+only, per standing policy on git actions of this kind.
