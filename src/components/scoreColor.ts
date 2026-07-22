@@ -1,5 +1,18 @@
 import type { Pub } from "../types";
 
+const DEMO_PHOTOS = [
+  "https://images.unsplash.com/photo-1608270586620-248524c67de9?auto=format&fit=crop&w=480&h=480&q=80",
+  "https://images.unsplash.com/photo-1575361204480-aadea25e6e68?auto=format&fit=crop&w=480&h=480&q=80",
+  "https://images.unsplash.com/photo-1518099074172-2e47ee6cfdc0?auto=format&fit=crop&w=480&h=480&q=80",
+  "https://images.unsplash.com/photo-1535958636474-b021ee887b13?auto=format&fit=crop&w=480&h=480&q=80",
+  "https://images.unsplash.com/photo-1566633806327-68e152aaf26d?auto=format&fit=crop&w=480&h=480&q=80",
+  "https://images.unsplash.com/photo-1436076863939-06870fe779c2?auto=format&fit=crop&w=480&h=480&q=80",
+  "https://images.unsplash.com/photo-1505075106905-fb052892c116?auto=format&fit=crop&w=480&h=480&q=80",
+  "https://images.unsplash.com/photo-1567696911980-2eed69a46042?auto=format&fit=crop&w=480&h=480&q=80",
+  "https://images.unsplash.com/photo-1571613316887-6f8d5cbf7ef7?auto=format&fit=crop&w=480&h=480&q=80",
+  "https://images.unsplash.com/photo-1584225064785-c62a8b43d148?auto=format&fit=crop&w=480&h=480&q=80",
+];
+
 /** Map a 0–5 weighted score to a hue for fallback pin gradients. */
 export function scoreColor(score: number): string {
   const t = Math.max(0, Math.min(1, score / 5));
@@ -28,13 +41,11 @@ export function categoryEmoji(pub: Pub): string {
   return "🍺";
 }
 
-/**
- * Deterministic demo "photo" for a pub (looks like the reference photo-map).
- * Seeded so each pub keeps the same image; falls back to an emoji tile offline.
- */
+/** A stable photo for each demo pub; pins fall back to an emoji tile offline. */
 export function pubPhoto(pub: Pub): string {
-  const seed = pub.id.replace(/\W+/g, "");
-  return `https://picsum.photos/seed/caneca${seed}/240/240`;
+  let hash = 0;
+  for (const char of pub.id) hash = (hash * 31 + char.charCodeAt(0)) >>> 0;
+  return DEMO_PHOTOS[hash % DEMO_PHOTOS.length];
 }
 
 export function timeAgo(ts: number): string {

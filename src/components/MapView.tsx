@@ -32,6 +32,7 @@ interface PinRefs {
   bubble: HTMLDivElement;
   fallback: HTMLDivElement;
   badge: HTMLDivElement;
+  name: HTMLDivElement;
   sub: HTMLDivElement;
 }
 
@@ -69,7 +70,40 @@ export function MapView(props: Props) {
     });
     mapRef.current = map;
 
+    return () => {
+      map.remove();
+      mapRef.current = null;
+      pins.current.clear();
+    };
+  }, []);
+
+  // Pub data arrives after the map mounts, so keep its markers in sync.
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+
+    const pubIds = new Set(pubs.map((pub) => pub.id));
+    for (const [pubId, pin] of pins.current) {
+      if (!pubIds.has(pubId)) {
+        pin.marker.remove();
+        pins.current.delete(pubId);
+      }
+    }
+
     for (const pub of pubs) {
+      const existing = pins.current.get(pub.id);
+      const photo = photos[pub.id] ?? pubPhoto(pub);
+      if (existing) {
+        existing.marker.setLngLat([pub.lon, pub.lat]);
+        existing.name.textContent = pub.name;
+        existing.fallback.textContent = categoryEmoji(pub);
+        if (existing.thumb.getAttribute("src") !== photo) {
+          existing.bubble.classList.remove("noimg");
+          existing.thumb.src = photo;
+        }
+        continue;
+      }
+
       const el = document.createElement("div");
       el.className = "ppin";
       el.innerHTML = `
@@ -84,16 +118,22 @@ export function MapView(props: Props) {
       const bubble = el.querySelector<HTMLDivElement>(".bubble")!;
       const fallback = el.querySelector<HTMLDivElement>(".fallback")!;
       const badge = el.querySelector<HTMLDivElement>(".badge .val")!.parentElement as HTMLDivElement;
-      const nm = el.querySelector<HTMLDivElement>(".plabel .nm")!;
+      const name = el.querySelector<HTMLDivElement>(".plabel .nm")!;
       const sub = el.querySelector<HTMLDivElement>(".plabel .sub")!;
+      const score = scores[pub.id];
 
-      nm.textContent = pub.name;
+      name.textContent = pub.name;
+      badge.querySelector<HTMLSpanElement>(".val")!.textContent = score
+        ? score.weighted_score.toFixed(1)
+        : "–";
+      sub.textContent = score ? `${score.rating_count} pours` : "new";
       fallback.textContent = categoryEmoji(pub);
-      const [c1, c2] = pinGradient(scores[pub.id]?.weighted_score ?? 0);
+      const [c1, c2] = pinGradient(score?.weighted_score ?? 0);
       fallback.style.setProperty("--pin-c1", c1);
       fallback.style.setProperty("--pin-c2", c2);
       thumb.onerror = () => bubble.classList.add("noimg");
-      thumb.src = photos[pub.id] ?? pubPhoto(pub);
+      thumb.onload = () => bubble.classList.remove("noimg");
+      thumb.src = photo;
 
       el.addEventListener("click", (e) => {
         e.stopPropagation();
@@ -102,16 +142,9 @@ export function MapView(props: Props) {
       const marker = new maplibregl.Marker({ element: el, anchor: "bottom" })
         .setLngLat([pub.lon, pub.lat])
         .addTo(map);
-      pins.current.set(pub.id, { marker, el, thumb, bubble, fallback, badge, sub });
+      pins.current.set(pub.id, { marker, el, thumb, bubble, fallback, badge, name, sub });
     }
-
-    return () => {
-      map.remove();
-      mapRef.current = null;
-      pins.current.clear();
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [pubs, photos]);
 
   // scores → badges, labels, fallback colour
   useEffect(() => {
@@ -125,17 +158,6 @@ export function MapView(props: Props) {
       p.fallback.style.setProperty("--pin-c2", c2);
     }
   }, [scores]);
-
-  // user photos override the seed thumbnail
-  useEffect(() => {
-    for (const [pubId, p] of pins.current) {
-      const override = photos[pubId];
-      if (override && p.thumb.src !== override) {
-        p.bubble.classList.remove("noimg");
-        p.thumb.src = override;
-      }
-    }
-  }, [photos]);
 
   // featured / selected labelling
   useEffect(() => {

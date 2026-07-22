@@ -107,6 +107,30 @@ describe("parseAssessmentResponse", () => {
     });
   });
 
+  it("prefers typed assessment tool arguments", () => {
+    expect(
+      parseAssessmentResponse({
+        response: null,
+        tool_calls: [
+          {
+            name: "submit_assessment",
+            arguments: {
+              isImage: true,
+              isBeer: true,
+              score: 4.4,
+              reason: "A crisp pour with a lasting head.",
+            },
+          },
+        ],
+      }),
+    ).toEqual({
+      isImage: true,
+      isBeer: true,
+      score: 4.4,
+      reason: "A crisp pour with a lasting head.",
+    });
+  });
+
   it("normalizes scores returned on other common scales", () => {
     expect(
       parseAssessmentResponse({

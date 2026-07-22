@@ -68,13 +68,13 @@ export function PhotoCaptureDialog({ pub, onClose, onPhoto, onRated }: Props) {
       return;
     }
 
-    const scale = Math.min(1, 1920 / Math.max(video.videoWidth, video.videoHeight));
+    const scale = Math.min(1, 1024 / Math.max(video.videoWidth, video.videoHeight));
     const canvas = document.createElement("canvas");
     canvas.width = Math.round(video.videoWidth * scale);
     canvas.height = Math.round(video.videoHeight * scale);
     canvas.getContext("2d")?.drawImage(video, 0, 0, canvas.width, canvas.height);
     const blob = await new Promise<Blob | null>((resolve) =>
-      canvas.toBlob(resolve, "image/jpeg", 0.88),
+      canvas.toBlob(resolve, "image/jpeg", 0.82),
     );
     if (!blob) {
       setError("Could not capture that frame. Please try again.");
@@ -101,7 +101,6 @@ export function PhotoCaptureDialog({ pub, onClose, onPhoto, onRated }: Props) {
         latitude: pub.lat,
         longitude: pub.lon,
       });
-      onPhoto(pub.id, preview);
       setPhase("rating");
       poll(response.submission_id);
     } catch (cause) {
@@ -115,6 +114,7 @@ export function PhotoCaptureDialog({ pub, onClose, onPhoto, onRated }: Props) {
       try {
         const submission = await api.getSubmission(id);
         if (submission.rating !== null) {
+          onPhoto(pub.id, `/api/uploads/${encodeURIComponent(id)}/image`);
           setRating(submission.rating);
           setPhase("done");
           onRated(submission.rating);

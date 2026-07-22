@@ -3,7 +3,11 @@ import {
   type WorkflowEvent,
   type WorkflowStep,
 } from "cloudflare:workers";
-import { ASSESSMENT_PROMPT, parseAssessmentResponse } from "./assessment";
+import {
+  ASSESSMENT_PROMPT,
+  ASSESSMENT_RETRY_PROMPT,
+  parseAssessmentResponse,
+} from "./assessment";
 import { getPhotoResults } from "./results";
 import type { Env, PhotoWorkflowParams } from "./worker-types";
 
@@ -30,34 +34,62 @@ export class PhotoAssessmentWorkflow extends WorkflowEntrypoint<Env, PhotoWorkfl
           }
 
           const bytes = new Uint8Array(await object.arrayBuffer());
-          const response = await this.env.AI.run(
-            "@cf/meta/llama-3.2-11b-vision-instruct",
-            {
-              messages: [
-                {
-                  role: "user",
-                  content: [
-                    { type: "text", text: ASSESSMENT_PROMPT },
-                    {
-                      type: "image_url",
-                      image_url: {
-                        url: toImageDataUrl(bytes, params.contentType),
+          const imageUrl = toImageDataUrl(bytes, params.contentType);
+          const runInference = async (prompt: string, attempt: string): Promise<unknown> => {
+            const response = await this.env.AI.run(
+              "@cf/meta/llama-3.2-11b-vision-instruct",
+              {
+                messages: [
+                  {
+                    role: "user",
+                    content: [
+                      { type: "text", text: prompt },
+                      {
+                        type: "image_url",
+                        image_url: { url: imageUrl },
                       },
-                    },
-                  ],
-                },
-              ],
-              max_tokens: 180,
-              temperature: 0,
-            },
-            { returnRawResponse: true },
-          );
+                    ],
+                  },
+                ],
+                max_tokens: 180,
+                temperature: 0,
+              },
+              { returnRawResponse: true },
+            );
 
-          if (!response.ok) {
-            throw new Error(`Workers AI request failed with status ${response.status}`);
+            if (!response.ok) {
+              const detail = (await response.text()).replace(/\s+/g, " ").slice(0, 240);
+              console.error("Workers AI HTTP error:", {
+                attempt,
+                status: response.status,
+                statusText: response.statusText,
+                headers: Object.fromEntries(response.headers),
+                detail,
+                imageBytes: bytes.byteLength,
+                contentType: params.contentType,
+              });
+              throw new Error(
+                `Workers AI request failed with status ${response.status}${detail ? `: ${detail}` : ""}`,
+              );
+            }
+
+            const output: unknown = await response.json();
+            console.log(`Workers AI ${attempt} output:`, JSON.stringify(output));
+            return output;
+          };
+
+          try {
+            return parseAssessmentResponse(
+              await runInference(ASSESSMENT_PROMPT, "initial"),
+            );
+          } catch (error) {
+            if (error instanceof Error && error.message.startsWith("Workers AI request failed")) {
+              throw error;
+            }
+            return parseAssessmentResponse(
+              await runInference(ASSESSMENT_RETRY_PROMPT, "retry"),
+            );
           }
-
-          return parseAssessmentResponse(await response.json());
         },
       );
 

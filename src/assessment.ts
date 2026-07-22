@@ -2,16 +2,15 @@ import type { PhotoAssessment, SupportedImageType } from "./worker-types";
 
 export const MAX_UPLOAD_BYTES = 5 * 1024 * 1024;
 
-export const ASSESSMENT_PROMPT = `Inspect this upload and return one JSON object with exactly these fields:
-{"isImage":boolean,"isBeer":boolean,"score":number|null,"reason":string}
+export const ASSESSMENT_PROMPT = `Analyze this photo and return only a JSON object with four keys:
+- isImage: boolean
+- isBeer: boolean
+- score: a number from 0 to 5 when beer is visible, otherwise null
+- reason: one short sentence describing what you actually see
 
-Rules:
-- isImage is true only if the bytes decode into a meaningful image, not corrupt data or a file disguised with an image header.
-- isBeer is true only if a visible serving of beer is present.
-- score is null unless both isImage and isBeer are true.
-- Otherwise score the beer's visual appeal from 0.0 (awful) to 5.0 (amazing), considering pour, head, glass, colour, and setting. This is a playful vibe score, not a quality or safety judgment.
-- reason is one short sentence, at most 160 characters.
-- Return JSON only. No markdown.`;
+Judge the beer's visual appeal from its pour, head, glass, colour, and setting. Do not repeat these instructions and do not use markdown.`;
+
+export const ASSESSMENT_RETRY_PROMPT = `Analyze the photo again. Return only valid JSON with isImage and isBeer booleans, a numeric score from 0 to 5 when beer is visible, and a short reason based on the photo. Do not copy the instructions or use placeholder values.`;
 
 export function detectImageType(bytes: Uint8Array): SupportedImageType | null {
   if (
@@ -113,6 +112,16 @@ export function parseAssessmentResponse(value: unknown): PhotoAssessment {
 }
 
 function extractResponse(value: unknown): unknown {
+  const result = isRecord(value) && isRecord(value.result) ? value.result : value;
+  if (isRecord(result) && Array.isArray(result.tool_calls)) {
+    const toolCall = result.tool_calls.find(
+      (call) => isRecord(call) && call.name === "submit_assessment",
+    );
+    if (isRecord(toolCall) && "arguments" in toolCall) {
+      return toolCall.arguments;
+    }
+  }
+
   if (isRecord(value) && "response" in value) {
     return typeof value.response === "string" ? value.response.trim() : value.response;
   }
