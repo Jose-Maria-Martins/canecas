@@ -1,0 +1,125 @@
+{
+  "_meta": {
+    "source": "OpenStreetMap via Overpass API",
+    "note": "Pre-event one-time seed (TASKS.md §9/§11). No live Overpass calls during the demo.",
+    "query": "[out:json];(node[\"amenity\"~\"pub|bar\"](38.706,-9.152,38.718,-9.138););out body;",
+    "city": "Lisbon, PT",
+    "generated_at": "2026-07-20T09:00:00Z",
+    "center": { "lat": 38.7115, "lon": -9.1445 },
+    "count": 14
+  },
+  "pubs": [
+    {
+      "id": "node/1001",
+      "name": "Pensão Amor",
+      "lat": 38.70722,
+      "lon": -9.14562,
+      "address": "R. do Alecrim 19, Cais do Sodré",
+      "osm_raw": { "amenity": "bar", "name": "Pensão Amor", "addr:street": "Rua do Alecrim" }
+    },
+    {
+      "id": "node/1002",
+      "name": "Pistola y Corazón",
+      "lat": 38.70801,
+      "lon": -9.14631,
+      "address": "R. da Boavista 16, Cais do Sodré",
+      "osm_raw": { "amenity": "bar", "name": "Pistola y Corazón" }
+    },
+    {
+      "id": "node/1003",
+      "name": "O Bom O Mau e O Vilão",
+      "lat": 38.70766,
+      "lon": -9.14498,
+      "address": "R. do Alecrim 21, Cais do Sodré",
+      "osm_raw": { "amenity": "bar", "name": "O Bom O Mau e O Vilão" }
+    },
+    {
+      "id": "node/1004",
+      "name": "Sol e Pesca",
+      "lat": 38.70744,
+      "lon": -9.14607,
+      "address": "R. Nova do Carvalho 44, Cais do Sodré",
+      "osm_raw": { "amenity": "bar", "name": "Sol e Pesca" }
+    },
+    {
+      "id": "node/1005",
+      "name": "Musicbox Lisboa",
+      "lat": 38.70712,
+      "lon": -9.14555,
+      "address": "R. Nova do Carvalho 24, Cais do Sodré",
+      "osm_raw": { "amenity": "bar", "name": "Musicbox", "live_music": "yes" }
+    },
+    {
+      "id": "node/1006",
+      "name": "Bicaense",
+      "lat": 38.70998,
+      "lon": -9.14712,
+      "address": "R. da Bica de Duarte Belo 42A, Bica",
+      "osm_raw": { "amenity": "bar", "name": "Bicaense" }
+    },
+    {
+      "id": "node/1007",
+      "name": "Park Bar",
+      "lat": 38.71046,
+      "lon": -9.14803,
+      "address": "Calç. do Combro 58 (rooftop), Bairro Alto",
+      "osm_raw": { "amenity": "bar", "name": "Park", "rooftop": "yes" }
+    },
+    {
+      "id": "node/1008",
+      "name": "The George — English Pub",
+      "lat": 38.71123,
+      "lon": -9.14456,
+      "address": "R. do Norte 92, Bairro Alto",
+      "osm_raw": { "amenity": "pub", "name": "The George", "cuisine": "british" }
+    },
+    {
+      "id": "node/1009",
+      "name": "BA Wine Bar do Bairro Alto",
+      "lat": 38.71201,
+      "lon": -9.14512,
+      "address": "R. da Rosa 107, Bairro Alto",
+      "osm_raw": { "amenity": "bar", "name": "BA Wine Bar", "drink:wine": "yes" }
+    },
+    {
+      "id": "node/1010",
+      "name": "Artis — Bar de Vinhos",
+      "lat": 38.71165,
+      "lon": -9.14603,
+      "address": "R. do Diário de Notícias 95, Bairro Alto",
+      "osm_raw": { "amenity": "bar", "name": "Artis" }
+    },
+    {
+      "id": "node/1011",
+      "name": "Cervejaria Trindade",
+      "lat": 38.71089,
+      "lon": -9.14201,
+      "address": "R. Nova da Trindade 20C, Chiado",
+      "osm_raw": { "amenity": "pub", "name": "Cervejaria Trindade", "microbrewery": "no" }
+    },
+    {
+      "id": "node/1012",
+      "name": "Duque Brewpub",
+      "lat": 38.71012,
+      "lon": -9.14098,
+      "address": "Calç. do Duque 49, Chiado",
+      "osm_raw": { "amenity": "pub", "name": "Duque Brewpub", "microbrewery": "yes" }
+    },
+    {
+      "id": "node/1013",
+      "name": "Quimera Brewpub",
+      "lat": 38.70689,
+      "lon": -9.15012,
+      "address": "R. Prior do Crato 6, Alcântara",
+      "osm_raw": { "amenity": "pub", "name": "Quimera Brewpub", "microbrewery": "yes" }
+    },
+    {
+      "id": "node/1014",
+      "name": "Crafty Corner",
+      "lat": 38.71322,
+      "lon": -9.14367,
+      "address": "R. da Misericórdia 14, Príncipe Real",
+      "osm_raw": { "amenity": "pub", "name": "Crafty Corner", "cuisine": "craft_beer" }
+    }
+  ]
+}
