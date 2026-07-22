@@ -14,6 +14,7 @@ import { Challenges } from "./components/Challenges";
 import { XpBar } from "./components/XpBar";
 import { BeerRealModal } from "./components/BeerRealModal";
 import { pubPhoto } from "./components/scoreColor";
+import { PhotoCaptureDialog } from "./components/PhotoCaptureDialog";
 
 type Tab = "feed" | "board" | "quests";
 interface Toast {
@@ -42,6 +43,7 @@ export default function App() {
 
   const [beerreal, setBeerreal] = useState<BeerRealPrompt | null>(null);
   const [beerrealDismissed, setBeerrealDismissed] = useState<string | null>(null);
+  const [capturePubId, setCapturePubId] = useState<string | null>(null);
 
   const [toasts, setToasts] = useState<Toast[]>([]);
   const toastId = useRef(0);
@@ -170,7 +172,10 @@ export default function App() {
     const target = geo.coords
       ? [...pubs].sort((a, b) => distanceMeters(geo.coords!, a) - distanceMeters(geo.coords!, b))[0]
       : pubs[0];
-    if (target) selectPub(target.id);
+    if (target) {
+      selectPub(target.id);
+      setCapturePubId(target.id);
+    }
   }
 
   function onToastAndRefresh(msg: string, gold = false) {
@@ -220,46 +225,9 @@ export default function App() {
 
         <div className="top-right">
           {user ? (
-<<<<<<< HEAD
             <XpBar user={user} />
           ) : (
             <span className="demo-access">Open demo</span>
-          )}
-        </div>
-
-        <div className="map-fabs">
-          <button className="fab rate-fab" onClick={openPhotoUpload} disabled={pubs.length === 0}>
-            📸 Rate a pint
-          </button>
-          <button className="fab" onClick={() => void nearMe()} disabled={geo.loading}>
-            📍 {geo.loading ? "Locating…" : "Pubs near me"}
-          </button>
-        </div>
-
-        {selectedPub && (
-          <PubPanel
-            pub={selectedPub}
-            score={scores[selectedPub.id]}
-            scoreBumped={bumped}
-            onClose={() => setSelectedId(null)}
-            onToast={onToastAndRefresh}
-          />
-        )}
-=======
-            <>
-              <XpBar user={user} />
-              <button
-                className="avatar-btn"
-                title={`${user.display_name} · sign out`}
-                onClick={() => void logout()}
-              >
-                {user.display_name.charAt(0).toUpperCase()}
-              </button>
-            </>
-          ) : (
-            <button className="btn primary sm" onClick={() => setShowAuth(true)}>
-              Sign in
-            </button>
           )}
         </div>
 
@@ -287,7 +255,6 @@ export default function App() {
         </div>
 
         {IS_MOCK && <div className="mockflag">mock API · standalone demo</div>}
->>>>>>> origin/main
       </div>
 
       {selectedPub ? (
@@ -295,17 +262,17 @@ export default function App() {
           pub={selectedPub}
           score={scores[selectedPub.id]}
           scoreBumped={bumped}
-          user={user}
           photo={photos[selectedPub.id]}
           onClose={() => setSelectedId(null)}
-          onRequireAuth={() => setShowAuth(true)}
-          onToast={onToastAndRefresh}
-          onPhoto={setPhoto}
+          onCapture={() => setCapturePubId(selectedPub.id)}
         />
       ) : (
         <>
           {!sheetOpen && (
             <div className="bottom">
+              <button className="camera-cta" onClick={openPhotoUpload} disabled={pubs.length === 0}>
+                <span>📸</span> Take a pint photo
+              </button>
               <button
                 className="places-pill"
                 onClick={(e) => {
@@ -356,6 +323,15 @@ export default function App() {
             </div>
           </div>
         </>
+      )}
+
+      {capturePubId && pubs.find((pub) => pub.id === capturePubId) && (
+        <PhotoCaptureDialog
+          pub={pubs.find((pub) => pub.id === capturePubId)!}
+          onClose={() => setCapturePubId(null)}
+          onPhoto={setPhoto}
+          onRated={(score) => onToastAndRefresh(`AI vibe rating: ${score.toFixed(1)} ★`, true)}
+        />
       )}
 
       {user && beerrealOpen && (

@@ -1,7 +1,6 @@
 {
   "compilerOptions": {
     "target": "ES2022",
-<<<<<<< HEAD
     "lib": ["ES2022", "WebWorker"],
     "module": "ESNext",
     "moduleResolution": "Bundler",
@@ -26,21 +25,4 @@
     "test/**/*.ts",
     "worker-configuration.d.ts"
   ]
-=======
-    "lib": ["ES2023", "WebWorker"],
-    "module": "ESNext",
-    "moduleResolution": "Bundler",
-    "types": ["@cloudflare/workers-types"],
-    "skipLibCheck": true,
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "moduleDetection": "force",
-    "noEmit": true,
-    "strict": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "noFallthroughCasesInSwitch": true
-  },
-  "include": ["worker"]
->>>>>>> origin/main
 }
