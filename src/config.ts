@@ -24,9 +24,6 @@ export const MAP_CENTER: { lat: number; lon: number; zoom: number } = {
   zoom: 15,
 };
 
-/** City label shown top-left (sticker style). */
-export const CITY = { name: "Lisbon", region: "PT" };
-
 /** Buddy feed poll interval (TASKS.md §6: client polls every 4s). */
 export const FEED_POLL_MS = 4000;
 

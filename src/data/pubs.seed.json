@@ -1,12 +1,11 @@
 {
   "_meta": {
-    "source": "OpenStreetMap via Overpass API",
-    "note": "Pre-event one-time seed (TASKS.md §9/§11). No live Overpass calls during the demo.",
-    "query": "[out:json];(node[\"amenity\"~\"pub|bar\"](38.706,-9.152,38.718,-9.138););out body;",
-    "city": "Lisbon, PT",
+    "source": "OpenStreetMap and Nominatim",
+    "note": "Pre-event worldwide demo seed. No live venue lookups during the demo.",
+    "city": "Worldwide, centered on Lisbon",
     "generated_at": "2026-07-20T09:00:00Z",
     "center": { "lat": 38.7115, "lon": -9.1445 },
-    "count": 14
+    "count": 30
   },
   "pubs": [
     {
@@ -120,6 +119,135 @@
       "lon": -9.1318481,
       "address": "R. de São João da Praça 95, Alfama",
       "osm_raw": { "amenity": "pub", "name": "Crafty Corner", "cuisine": "craft_beer" }
+    },
+    {
+      "id": "world/london-churchill-arms",
+      "name": "The Churchill Arms",
+      "lat": 51.5068785,
+      "lon": -0.1948694,
+      "address": "119 Kensington Church St, London, UK",
+      "osm_raw": { "amenity": "pub", "name": "The Churchill Arms" }
+    },
+    {
+      "id": "world/new-york-mcsorleys",
+      "name": "McSorley's Old Ale House",
+      "lat": 40.7287612,
+      "lon": -73.9897021,
+      "address": "15 E 7th St, New York, USA",
+      "osm_raw": { "amenity": "pub", "name": "McSorley's Old Ale House" }
+    },
+    {
+      "id": "world/dublin-temple-bar",
+      "name": "The Temple Bar",
+      "lat": 53.3454789,
+      "lon": -6.2640728,
+      "address": "47-48 Temple Bar, Dublin, Ireland",
+      "osm_raw": { "amenity": "pub", "name": "The Temple Bar" }
+    },
+    {
+      "id": "world/brussels-delirium",
+      "name": "Delirium Café",
+      "lat": 50.8484453,
+      "lon": 4.3538322,
+      "address": "Impasse de la Fidélité, Brussels, Belgium",
+      "osm_raw": { "amenity": "bar", "name": "Delirium Café", "cuisine": "craft_beer" }
+    },
+    {
+      "id": "world/amsterdam-hoppe",
+      "name": "Café Hoppe",
+      "lat": 52.3687949,
+      "lon": 4.8885771,
+      "address": "Spui 18, Amsterdam, Netherlands",
+      "osm_raw": { "amenity": "pub", "name": "Café Hoppe" }
+    },
+    {
+      "id": "world/prague-u-fleku",
+      "name": "U Fleků",
+      "lat": 50.0787442,
+      "lon": 14.4170184,
+      "address": "Křemencova, Prague, Czechia",
+      "osm_raw": { "amenity": "pub", "name": "U Fleků", "microbrewery": "yes" }
+    },
+    {
+      "id": "world/munich-hofbrauhaus",
+      "name": "Hofbräuhaus München",
+      "lat": 48.1376334,
+      "lon": 11.5799788,
+      "address": "Platzl 9, Munich, Germany",
+      "osm_raw": { "amenity": "pub", "name": "Hofbräuhaus", "microbrewery": "yes" }
+    },
+    {
+      "id": "world/copenhagen-mikkeller",
+      "name": "Mikkeller Bar Viktoriagade",
+      "lat": 55.6719575,
+      "lon": 12.5575483,
+      "address": "Viktoriagade, Copenhagen, Denmark",
+      "osm_raw": { "amenity": "bar", "name": "Mikkeller Bar", "cuisine": "craft_beer" }
+    },
+    {
+      "id": "world/san-francisco-toronado",
+      "name": "Toronado",
+      "lat": 37.77191,
+      "lon": -122.4312219,
+      "address": "547 Haight St, San Francisco, USA",
+      "osm_raw": { "amenity": "pub", "name": "Toronado", "cuisine": "craft_beer" }
+    },
+    {
+      "id": "world/sydney-baxter-inn",
+      "name": "The Baxter Inn",
+      "lat": -33.8697467,
+      "lon": 151.2055275,
+      "address": "Clarence St, Sydney, Australia",
+      "osm_raw": { "amenity": "bar", "name": "The Baxter Inn" }
+    },
+    {
+      "id": "world/tokyo-popeye",
+      "name": "Beer Club Popeye",
+      "lat": 35.6951001,
+      "lon": 139.7926125,
+      "address": "Ryōgoku 2-chōme, Tokyo, Japan",
+      "osm_raw": { "amenity": "pub", "name": "Beer Club Popeye", "cuisine": "craft_beer" }
+    },
+    {
+      "id": "world/buenos-aires-antares",
+      "name": "Antares Palermo",
+      "lat": -34.5895126,
+      "lon": -58.4292123,
+      "address": "Honduras, Palermo, Buenos Aires, Argentina",
+      "osm_raw": { "amenity": "bar", "name": "Antares", "microbrewery": "yes" }
+    },
+    {
+      "id": "world/bengaluru-toit",
+      "name": "Toit Brewpub",
+      "lat": 12.9794113,
+      "lon": 77.6406278,
+      "address": "298 100 Feet Rd, Bengaluru, India",
+      "osm_raw": { "amenity": "pub", "name": "Toit", "microbrewery": "yes" }
+    },
+    {
+      "id": "world/curitiba-bodebrown",
+      "name": "Bodebrown",
+      "lat": -25.472563,
+      "lon": -49.2475066,
+      "address": "Rua Carlos de Laet 1015, Curitiba, Brazil",
+      "osm_raw": { "amenity": "pub", "name": "Bodebrown", "microbrewery": "yes" }
+    },
+    {
+      "id": "world/cape-town-beerhouse",
+      "name": "Beerhouse on Long",
+      "lat": -33.9253316,
+      "lon": 18.4160788,
+      "address": "223 Long St, Cape Town, South Africa",
+      "osm_raw": { "amenity": "pub", "name": "Beerhouse" }
+    },
+    {
+      "id": "demo/cloudflare-lisbon",
+      "name": "Cloudflare Lisbon",
+      "lat": 38.701761,
+      "lon": -9.1768778,
+      "address": "ALLO, Avenida da Índia 10, Lisbon",
+      "osm_raw": { "amenity": "pub", "name": "Cloudflare Lisbon", "demo": "yes" },
+      "featured": "cloudflare"
     }
   ]
 }

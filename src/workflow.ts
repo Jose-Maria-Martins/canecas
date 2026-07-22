@@ -22,8 +22,8 @@ export class PhotoAssessmentWorkflow extends WorkflowEntrypoint<Env, PhotoWorkfl
         {
           retries: {
             limit: 3,
-            delay: "5 seconds",
-            backoff: "exponential",
+            delay: 250,
+            backoff: "constant",
           },
           timeout: "2 minutes",
         },
