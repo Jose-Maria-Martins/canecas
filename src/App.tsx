@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { Challenge, LeaderboardEntry, Pub, PubScore, BeerRealPrompt } from "./types";
 import { api } from "./api/client";
-import { IS_MOCK, CITY } from "./config";
+import { IS_MOCK } from "./config";
 import { distanceMeters } from "./api/scoring";
 import { useSession } from "./hooks/useSession";
 import { useGeolocation } from "./hooks/useGeolocation";
@@ -17,6 +17,8 @@ import { pubPhoto } from "./components/scoreColor";
 import { PhotoCaptureDialog } from "./components/PhotoCaptureDialog";
 
 type Tab = "feed" | "board" | "quests";
+const CLOUDFLARE_OFFICE = { lat: 38.701761, lon: -9.1768778 };
+
 interface Toast {
   id: number;
   msg: string;
@@ -251,16 +253,12 @@ export default function App() {
           dark={dark}
         />
 
-        <div className="stickers" aria-hidden>
-          <div className="sticker s1">🍺</div>
-          <div className="sticker s2">🍻</div>
-          <div className="sticker s3">🍷</div>
-        </div>
-
         <div className="top-left">
-          <div className="city">
-            {CITY.name}
-            <small>.</small>
+          <div className="brandmark" aria-label="Beerview">
+            <span className="brandmark-glyph" aria-hidden="true">🍺</span>
+            <span className="brandmark-text">
+              Beer<span className="brandmark-accent">view</span>
+            </span>
           </div>
         </div>
 
@@ -273,6 +271,30 @@ export default function App() {
         </div>
 
         <div className="fab-stack">
+          <button
+            className="fab cloudflare-fab"
+            title="Cloudflare Lisbon"
+            aria-label="Show Cloudflare Lisbon"
+            onClick={(e) => {
+              e.stopPropagation();
+              setSelectedId(null);
+              setFocus({ ...CLOUDFLARE_OFFICE, zoom: 15.5 });
+            }}
+          >
+            ☁
+          </button>
+          <button
+            className="fab"
+            title="View worldwide pubs"
+            aria-label="View worldwide pubs"
+            onClick={(e) => {
+              e.stopPropagation();
+              setSelectedId(null);
+              setFocus({ lat: 20, lon: 12, zoom: 0.4 });
+            }}
+          >
+            🌍
+          </button>
           <button
             className="fab"
             title={dark ? "Light map" : "Dark map"}

@@ -92,6 +92,15 @@ export class MockClient implements ApiClient {
     let sum = 0;
     let count = 0;
     for (const pub of PUBS) {
+      if (pub.featured === "cloudflare") {
+        this.scores.set(pub.id, {
+          pub_id: pub.id,
+          avg_rating: 5,
+          rating_count: 500,
+          weighted_score: 5,
+        });
+        continue;
+      }
       const rating_count = 3 + Math.floor(Math.random() * 40);
       const avg_rating = 3.2 + Math.random() * 1.6; // 3.2..4.8
       sum += avg_rating * rating_count;
@@ -105,6 +114,7 @@ export class MockClient implements ApiClient {
     }
     this.globalMean = count > 0 ? sum / count : 3.9;
     for (const [id, s] of this.scores) {
+      if (s.weighted_score === 5) continue;
       this.scores.set(id, {
         ...s,
         weighted_score: weightedScore(s.avg_rating, s.rating_count, this.globalMean),
@@ -325,19 +335,21 @@ export class MockClient implements ApiClient {
 
     // PubAggregatorDO recompute (§4) — real ratings only.
     const prev = this.scores.get(sub.pub_id)!;
+    const pub = PUBS.find((candidate) => candidate.id === sub.pub_id);
     const rating_count = prev.rating_count + 1;
     const avg_rating = (prev.avg_rating * prev.rating_count + rating) / rating_count;
-    const next: PubScore = {
-      pub_id: sub.pub_id,
-      avg_rating,
-      rating_count,
-      weighted_score: weightedScore(avg_rating, rating_count, this.globalMean),
-    };
+    const next: PubScore = pub?.featured === "cloudflare"
+      ? { pub_id: sub.pub_id, avg_rating: 5, rating_count: 500, weighted_score: 5 }
+      : {
+          pub_id: sub.pub_id,
+          avg_rating,
+          rating_count,
+          weighted_score: weightedScore(avg_rating, rating_count, this.globalMean),
+        };
     this.scores.set(sub.pub_id, next);
     this.broadcast(sub.pub_id, next);
 
     // gamification side-effects
-    const pub = PUBS.find((p) => p.id === sub.pub_id);
     this.pushOwnActivity("submission", sub.pub_id, pub?.name ?? null);
     this.awardXp(30, "submission");
     // complete the daily "rate a pint" challenge

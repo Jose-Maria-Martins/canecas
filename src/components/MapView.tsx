@@ -95,6 +95,7 @@ export function MapView(props: Props) {
       const photo = photos[pub.id] ?? pubPhoto(pub);
       if (existing) {
         existing.marker.setLngLat([pub.lon, pub.lat]);
+        existing.el.classList.toggle("cloudflare", pub.featured === "cloudflare");
         existing.name.textContent = pub.name;
         existing.fallback.textContent = categoryEmoji(pub);
         if (existing.thumb.getAttribute("src") !== photo) {
@@ -106,6 +107,7 @@ export function MapView(props: Props) {
 
       const el = document.createElement("div");
       el.className = "ppin";
+      el.classList.toggle("cloudflare", pub.featured === "cloudflare");
       el.innerHTML = `
         <div class="pin-visual">
           <div class="plabel"><div class="nm"></div><div class="sub"></div></div>

@@ -10,6 +10,7 @@ export interface Pub {
   lon: number;
   address: string;
   osm_raw?: Record<string, string>;
+  featured?: "cloudflare";
 }
 
 /** Materialized pub score (TASKS.md §3 `pub_scores`, §4 formula). */

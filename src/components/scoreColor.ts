@@ -34,6 +34,7 @@ export function stars(score: number): string {
 
 /** Emoji for a pin fallback, derived from the OSM tags. */
 export function categoryEmoji(pub: Pub): string {
+  if (pub.featured === "cloudflare") return "☁️";
   const raw = pub.osm_raw ?? {};
   if (raw.microbrewery === "yes" || raw.cuisine === "craft_beer") return "🍺";
   if (raw["drink:wine"] === "yes") return "🍷";
