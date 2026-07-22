@@ -18,6 +18,7 @@ import type {
 } from "../types";
 import type { ApiClient, ScoreSubscription } from "./client";
 import { SCORE_POLL_MS } from "../config";
+import { getPipelineResult, uploadPhoto } from "./pipeline";
 
 async function http<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(path, {
@@ -79,17 +80,26 @@ export class RealClient implements ApiClient {
     return http(`/api/pub/${encodeURIComponent(pubId)}/submissions`);
   }
 
-  async submitPhoto(input: { pubId: string; file: File; turnstileToken: string }): Promise<PhotoAccepted> {
-    const form = new FormData();
-    form.set("pubId", input.pubId);
-    form.set("turnstileToken", input.turnstileToken);
-    form.set("photo", input.file);
-    // Let the browser set the multipart boundary — no explicit content-type.
-    return http("/api/photos", { method: "POST", body: form, headers: {} });
+  async submitPhoto(input: {
+    pubId: string;
+    file: File;
+    latitude: number;
+    longitude: number;
+  }): Promise<PhotoAccepted> {
+    const submissionId = await uploadPhoto(input);
+    return { submission_id: submissionId, status: "pending" };
   }
 
   async getSubmission(id: string): Promise<Submission> {
-    return http(`/api/submissions/${encodeURIComponent(id)}`);
+    const result = await getPipelineResult(id);
+    return {
+      id,
+      user_id: "current-user",
+      pub_id: "",
+      photo_url: `/api/uploads/${encodeURIComponent(id)}/image`,
+      rating: result.status === "complete" ? result.score : null,
+      created_at: Date.now(),
+    };
   }
 
   async getFeed(since: number): Promise<FeedResponse> {

@@ -1,0 +1,63 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "canecas-photo-pipeline",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-07-22",
+  "observability": {
+    "enabled": true
+  },
+  "assets": {
+    "directory": "./dist",
+    "not_found_handling": "single-page-application",
+    "run_worker_first": ["/api/*"]
+  },
+  "ai": {
+    "binding": "AI",
+    "remote": true
+  },
+  "ratelimits": [
+    {
+      "name": "UPLOAD_RATE_LIMITER",
+      "namespace_id": "43101",
+      "simple": {
+        "limit": 5,
+        "period": 60
+      }
+    }
+  ],
+  "r2_buckets": [
+    {
+      "binding": "BEER_PHOTOS",
+      "bucket_name": "caneca-photos"
+    }
+  ],
+  "workflows": [
+    {
+      "name": "canecas-photo-assessment",
+      "binding": "PHOTO_WORKFLOW",
+      "class_name": "PhotoAssessmentWorkflow"
+    }
+  ],
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "PHOTO_RESULTS",
+        "class_name": "PhotoResults"
+      },
+      {
+        "name": "MAP_SUBMISSIONS",
+        "class_name": "MapSubmissions"
+      }
+    ]
+  },
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": ["PhotoResults"]
+    },
+    {
+      "tag": "v2",
+      "new_sqlite_classes": ["MapSubmissions"]
+    }
+  ]
+}

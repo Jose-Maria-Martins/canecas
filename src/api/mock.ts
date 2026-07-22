@@ -26,10 +26,10 @@ import type {
   User,
 } from "../types";
 import type { ApiClient, ScoreSubscription } from "./client";
+import { getPipelineResult, uploadPhoto } from "./pipeline";
 import { levelFromXp, weightedScore } from "./scoring";
 
 const SESSION_KEY = "caneca.mock.session.v1";
-const AI_DELAY_MS = 1600; // simulated Workers AI inference latency (§5)
 
 function ulid(prefix = ""): string {
   const t = Date.now().toString(36);
@@ -298,10 +298,14 @@ export class MockClient implements ApiClient {
 
   // ---- photos / AI pipeline (§5) ----------------------------------------
 
-  async submitPhoto(input: { pubId: string; file: File; turnstileToken: string }): Promise<PhotoAccepted> {
+  async submitPhoto(input: {
+    pubId: string;
+    file: File;
+    latitude: number;
+    longitude: number;
+  }): Promise<PhotoAccepted> {
     if (!this.user) throw new Error("Sign in to submit a photo");
-    if (!input.turnstileToken) throw new Error("Turnstile verification required");
-    const id = ulid("sub_");
+    const id = await uploadPhoto(input);
     const submission: Submission = {
       id,
       user_id: this.user.id,
@@ -311,16 +315,12 @@ export class MockClient implements ApiClient {
       created_at: nowMs(),
     };
     this.submissions.set(id, submission);
-    // Simulate the async queue + Workers AI inference, then the PubAggregatorDO
-    // recompute + WS broadcast.
-    setTimeout(() => this.finishInference(id), AI_DELAY_MS);
     return { submission_id: id, status: "pending" };
   }
 
-  private finishInference(submissionId: string) {
+  private finishInference(submissionId: string, rating: number) {
     const sub = this.submissions.get(submissionId);
     if (!sub) return;
-    const rating = Math.round((3.0 + Math.random() * 2.0) * 10) / 10; // 3.0..5.0
     sub.rating = rating;
     this.submissions.set(submissionId, sub);
 
@@ -359,6 +359,16 @@ export class MockClient implements ApiClient {
   async getSubmission(id: string): Promise<Submission> {
     const s = this.submissions.get(id);
     if (!s) throw new Error("Unknown submission");
+    if (s.rating !== null) return s;
+
+    const result = await getPipelineResult(id);
+    if (result.status === "complete" && result.score !== null) {
+      this.finishInference(id, result.score);
+      return this.submissions.get(id)!;
+    }
+    if (result.status === "rejected" || result.status === "failed") {
+      throw new Error(result.reason || "The image could not be rated");
+    }
     return s;
   }
 

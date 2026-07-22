@@ -1,0 +1,28 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "canecas-photo-pipeline-test",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-07-22",
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "PHOTO_RESULTS",
+        "class_name": "PhotoResults"
+      },
+      {
+        "name": "MAP_SUBMISSIONS",
+        "class_name": "MapSubmissions"
+      }
+    ]
+  },
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": ["PhotoResults"]
+    },
+    {
+      "tag": "v2",
+      "new_sqlite_classes": ["MapSubmissions"]
+    }
+  ]
+}

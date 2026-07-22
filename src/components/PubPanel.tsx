@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from "react";
 import type { Pub, PubScore, User } from "../types";
 import { api } from "../api/client";
 import { stars } from "./scoreColor";
-import { Turnstile } from "./Turnstile";
 
 interface Props {
   pub: Pub;
@@ -23,7 +22,6 @@ type UploadState =
 
 export function PubPanel({ pub, score, scoreBumped, user, onClose, onRequireAuth, onToast }: Props) {
   const [upload, setUpload] = useState<UploadState>({ phase: "idle" });
-  const [tsToken, setTsToken] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const fileInput = useRef<HTMLInputElement | null>(null);
   const pollTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -31,7 +29,6 @@ export function PubPanel({ pub, score, scoreBumped, user, onClose, onRequireAuth
   // reset when switching pubs
   useEffect(() => {
     setUpload({ phase: "idle" });
-    setTsToken(null);
     setErr(null);
     return () => {
       if (pollTimer.current) clearTimeout(pollTimer.current);
@@ -48,12 +45,16 @@ export function PubPanel({ pub, score, scoreBumped, user, onClose, onRequireAuth
   async function submit() {
     if (upload.phase !== "ready") return;
     if (!user) return onRequireAuth();
-    if (!tsToken) return setErr("Complete the verification first");
     const preview = upload.preview;
     setUpload({ phase: "submitting", preview });
     setErr(null);
     try {
-      const res = await api.submitPhoto({ pubId: pub.id, file: upload.file, turnstileToken: tsToken });
+      const res = await api.submitPhoto({
+        pubId: pub.id,
+        file: upload.file,
+        latitude: pub.lat,
+        longitude: pub.lon,
+      });
       setUpload({ phase: "rating", preview, submissionId: res.submission_id });
       poll(res.submission_id, preview);
     } catch (e) {
@@ -146,7 +147,7 @@ export function PubPanel({ pub, score, scoreBumped, user, onClose, onRequireAuth
             <input
               ref={fileInput}
               type="file"
-              accept="image/*"
+              accept="image/jpeg,image/png,image/webp"
               capture="environment"
               hidden
               onChange={(e) => pickFile(e.target.files?.[0])}
@@ -154,12 +155,9 @@ export function PubPanel({ pub, score, scoreBumped, user, onClose, onRequireAuth
 
             {user ? (
               upload.phase === "ready" && (
-                <>
-                  <Turnstile onToken={setTsToken} />
-                  <button className="btn primary" onClick={submit} disabled={!tsToken}>
-                    Rate my beer ✨
-                  </button>
-                </>
+                <button className="btn primary" onClick={submit}>
+                  Rate my beer ✨
+                </button>
               )
             ) : (
               <button className="btn primary" onClick={onRequireAuth}>

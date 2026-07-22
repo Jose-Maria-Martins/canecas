@@ -39,7 +39,8 @@ export interface ApiClient {
   submitPhoto(input: {
     pubId: string;
     file: File;
-    turnstileToken: string;
+    latitude: number;
+    longitude: number;
   }): Promise<PhotoAccepted>;
   /** Poll a submission until AI sets `rating` (mock resolves after a delay). */
   getSubmission(id: string): Promise<Submission>;

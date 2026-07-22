@@ -1,5 +1,5 @@
-import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
+import { defineConfig } from "vite";
 
 // The SPA builds to ./dist and is served by the single Caneca Worker via
 // Workers Static Assets (see TASKS.md §9). During local dev, /api and /ws are
@@ -17,6 +17,7 @@ export default defineConfig({
       "/api": {
         target: "http://localhost:8787",
         changeOrigin: true,
+        ws: true,
       },
       "/ws": {
         target: "ws://localhost:8787",

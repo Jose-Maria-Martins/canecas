@@ -1,0 +1,92 @@
+.route-loading {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  color: var(--amber);
+  background: var(--ink);
+  font-size: 11px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+}
+
+.map-page {
+  height: 100svh;
+  min-height: 620px;
+  overflow: hidden;
+  background: var(--paper);
+  color: var(--ink);
+}
+
+.map-header {
+  height: 116px;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 32px;
+  padding: 18px clamp(20px, 4vw, 64px);
+  border-bottom: 1px solid rgba(25, 22, 15, .2);
+}
+
+.map-header .brand { color: var(--ink); }
+.map-heading { text-align: center; }
+.map-heading .eyebrow { margin: 0 0 7px; font-size: 9px; }
+.map-heading h1 { margin: 0; font-size: clamp(34px, 4vw, 57px); line-height: .9; white-space: nowrap; }
+.map-camera-link { justify-self: end; color: var(--ink); font-size: 10px; letter-spacing: .1em; text-transform: uppercase; text-decoration: none; }
+.map-camera-link span { color: var(--amber); margin-left: 12px; }
+
+.map-stage { height: calc(100svh - 116px); min-height: 504px; position: relative; }
+.submission-map { width: 100%; height: 100%; background: #c9c1aa; }
+.submission-map .leaflet-tile-pane { filter: sepia(.5) saturate(.55) contrast(.92); }
+.submission-map .leaflet-control-zoom a { border: 0; border-radius: 0; background: var(--ink); color: var(--paper); }
+.submission-map .leaflet-control-attribution { background: rgba(240, 227, 193, .85); font-size: 8px; }
+
+.score-marker-wrap { background: none; border: 0; }
+.score-marker {
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  position: relative;
+  border: 3px solid var(--ink);
+  border-radius: 50% 50% 50% 8px;
+  transform: rotate(-45deg);
+  background: var(--amber);
+  color: var(--ink);
+  box-shadow: 5px 6px 0 rgba(25, 22, 15, .25);
+  font: 700 15px Georgia, serif;
+}
+.score-marker b { transform: rotate(45deg); }
+
+.submission-map .leaflet-popup-content-wrapper,
+.submission-map .leaflet-popup-tip { border-radius: 0; background: var(--paper); color: var(--ink); }
+.submission-map .leaflet-popup-content-wrapper { padding: 0; box-shadow: 12px 16px 40px rgba(25, 22, 15, .3); }
+.submission-map .leaflet-popup-content { margin: 0; width: 250px !important; }
+.submission-map .leaflet-popup-close-button { z-index: 2; color: white; background: rgba(25, 22, 15, .65); }
+.pint-popup img { display: block; width: 100%; height: 170px; object-fit: cover; background: #312d23; }
+.pint-popup-copy { padding: 18px; }
+.pint-popup-rating { display: flex; align-items: baseline; gap: 7px; }
+.pint-popup-rating strong { font: 700 44px/.8 Georgia, serif; }
+.pint-popup-rating span, .pint-popup time { color: #766c58; font-size: 9px; letter-spacing: .08em; text-transform: uppercase; }
+.pint-popup p { min-height: 2.8em; margin: 16px 0; font: 600 15px/1.4 Georgia, serif; }
+
+.map-count, .map-notice, .map-empty { position: absolute; z-index: 500; background: var(--paper); box-shadow: 8px 10px 0 rgba(25, 22, 15, .18); }
+.map-count { top: 24px; left: clamp(20px, 4vw, 64px); display: flex; align-items: center; gap: 13px; padding: 14px 18px; border-left: 5px solid var(--amber); }
+.map-count strong { font: 700 35px/.8 Georgia, serif; }
+.map-count span { color: #766c58; font-size: 8px; line-height: 1.4; letter-spacing: .08em; text-transform: uppercase; }
+.map-notice { left: 50%; bottom: 30px; transform: translateX(-50%); margin: 0; padding: 13px 18px; font-size: 9px; letter-spacing: .1em; text-transform: uppercase; }
+.map-notice-error { color: #a93520; }
+.map-empty { left: 50%; top: 50%; width: min(360px, calc(100% - 40px)); transform: translate(-50%, -50%) rotate(-1deg); padding: 28px; text-align: center; }
+.map-empty span { color: var(--amber); font-size: 9px; letter-spacing: .14em; text-transform: uppercase; }
+.map-empty strong { display: block; margin: 12px 0; font: 600 25px/1.1 Georgia, serif; }
+.map-empty p { color: #766c58; font-size: 10px; line-height: 1.6; }
+.map-empty a { display: inline-block; margin-top: 8px; color: var(--ink); font-size: 9px; letter-spacing: .1em; text-transform: uppercase; text-underline-offset: 5px; }
+
+@media (max-width: 700px) {
+  .map-page { min-height: 520px; }
+  .map-header { height: 90px; grid-template-columns: 1fr auto; padding: 14px 16px; }
+  .map-heading { grid-column: 1 / -1; grid-row: 2; display: none; }
+  .map-camera-link { font-size: 9px; }
+  .map-stage { height: calc(100svh - 90px); min-height: 430px; }
+  .map-count { top: 16px; left: 16px; }
+  .submission-map .leaflet-control-zoom { margin-top: 92px; }
+}
