@@ -629,3 +629,32 @@ header/structure adjustments needed now that it's a standalone document rather t
 
 This is engineer's and QA's first invocation on this project. Per Housekeeping above, engineer must
 also create `.gitignore` with at least a `TASKS.md` entry as part of this same invocation.
+
+### Verdicts on the spec.md packaging plan
+
+- Architect (fresh session): content is ready to commit as-is — strip only the outer chat-only fence
+  and the HANDOFF marker lines, everything else renders fine as a normal .md file.
+- Challenger (fresh): PASS, no revisions needed.
+- Security (fresh): **WARN** — marker content itself is clean (no secrets/credentials; the
+  `wrangler secret put` line is guidance text, not a leaked value). But it surfaced a real, separate
+  finding while checking git state, unrelated to the content itself:
+  - **`TASKS.md` is already tracked AND already pushed to `origin/main`, across 3 pre-existing commits**
+    (`d5ab470`, `c408c96`, `6a55f76` — all titled "feat: report beta"/variants, all touching only
+    TASKS.md). This happened outside this session — nothing in this conversation has run a commit or
+    push. Corrects the Housekeeping note's "no .gitignore exists yet" framing, which implied an empty
+    repo; the repo has history already.
+  - Practical effect: adding a `TASKS.md` entry to `.gitignore` now only stops *future* commits of it —
+    it's a no-op on the 3 already-pushed commits, whose content (including the Sessions/session-id
+    block) stays in shared origin/main history regardless.
+  - Those 3 commits also went directly to `main`, not a feature branch.
+  - Real fix for the historical commits would be either `git rm --cached TASKS.md` (safe, reversible,
+    but still needs a human commit — T3 blocks that for engineer) or, if fully purging it from history
+    is wanted, a history rewrite + force-push on `main` — explicitly a "genuinely destructive/irreversible
+    action on a shared branch" needing sign-off before anyone runs it, not something to route to
+    engineer as a routine fix.
+  - T2_GATE_REQUIRED: no, for spec.md/.gitignore creation as scoped (routine additive file ops). Flag
+    only if remediation of the historical-commit issue ends up needing the history-rewrite path.
+- Aggregate: WARN (security's content-scoped verdict is fine; the git-history finding is a separate,
+  out-of-band discovery, not a reason to fail this sub-task's own plan). Proceeding with spec.md +
+  forward-looking .gitignore creation now (safe, additive, doesn't foreclose any remediation choice).
+  Historical-commit question raised to the user directly rather than resolved automatically.
