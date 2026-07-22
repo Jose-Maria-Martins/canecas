@@ -26,6 +26,7 @@
     "wrangler": "4.113.0"
   },
   "dependencies": {
+    "hono": "^4.12.31",
     "leaflet": "^1.9.4",
     "maplibre-gl": "^4.7.1",
     "react": "^19.2.8",

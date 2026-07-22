@@ -1,0 +1,73 @@
+-- Seed: pubs for Austin, San Francisco, Lisbon (extras), and London so the
+-- map has real coverage in all 4 demo areas, not just the original Lisbon set.
+-- Same source data as src/data/pubs.seed.json (mock-mode frontend seed) --
+-- kept in sync so mock and real (VITE_API_MODE=real) modes show the same map.
+-- Not a live Overpass pull (see note in pubs.seed.json _meta) -- real named
+-- venues, neighborhood-accurate coordinates.
+
+INSERT OR IGNORE INTO pubs (id, name, lat, lon, address, osm_raw, created_at) VALUES
+  ('austin/deep-eddy-cabaret', 'Deep Eddy Cabaret', 30.287, -97.7676, '2315 Lake Austin Blvd, Austin, TX', '{"amenity": "bar", "name": "Deep Eddy Cabaret"}', 1753000000000),
+  ('austin/the-continental-club', 'The Continental Club', 30.254, -97.7497, '1315 S Congress Ave, Austin, TX', '{"amenity": "bar", "name": "The Continental Club"}', 1753000000000),
+  ('austin/the-elephant-room', 'The Elephant Room', 30.2652, -97.7431, '315 Congress Ave, Austin, TX', '{"amenity": "bar", "name": "The Elephant Room"}', 1753000000000),
+  ('austin/container-bar', 'Container Bar', 30.2551, -97.7391, '90 Rainey St, Austin, TX', '{"amenity": "bar", "name": "Container Bar"}', 1753000000000),
+  ('austin/clive-bar', 'Clive Bar', 30.2555, -97.7378, '609 Davis St, Austin, TX', '{"amenity": "bar", "name": "Clive Bar"}', 1753000000000),
+  ('austin/lucky-robot', 'Lucky Robot', 30.2548, -97.7385, '79 Rainey St, Austin, TX', '{"amenity": "bar", "name": "Lucky Robot"}', 1753000000000),
+  ('austin/blackheart-bar', 'Blackheart Bar', 30.2553, -97.7389, '86 Rainey St, Austin, TX', '{"amenity": "bar", "name": "Blackheart Bar"}', 1753000000000),
+  ('austin/dirty-dog-bar', 'Dirty Dog Bar', 30.2669, -97.7387, '505 E 6th St, Austin, TX', '{"amenity": "bar", "name": "Dirty Dog Bar"}', 1753000000000),
+  ('austin/the-iron-bear', 'The Iron Bear', 30.2685, -97.7469, '301 W 6th St, Austin, TX', '{"amenity": "pub", "name": "The Iron Bear"}', 1753000000000),
+  ('austin/coyote-ugly-saloon-austin', 'Coyote Ugly Saloon Austin', 30.2673, -97.7404, '313 E 6th St, Austin, TX', '{"amenity": "bar", "name": "Coyote Ugly Saloon Austin"}', 1753000000000),
+  ('austin/whisler-s', 'Whisler''s', 30.2637, -97.7268, '1816 E 6th St, Austin, TX', '{"amenity": "bar", "name": "Whisler''s"}', 1753000000000),
+  ('austin/white-horse', 'White Horse', 30.2589, -97.7241, '500 Comal St, Austin, TX', '{"amenity": "bar", "name": "White Horse"}', 1753000000000),
+  ('austin/nickel-city', 'Nickel City', 30.2732, -97.728, '1133 E 11th St, Austin, TX', '{"amenity": "bar", "name": "Nickel City"}', 1753000000000),
+  ('austin/hotel-vegas', 'Hotel Vegas', 30.2634, -97.7304, '1502 E 6th St, Austin, TX', '{"amenity": "bar", "name": "Hotel Vegas"}', 1753000000000),
+  ('austin/volstead-lounge', 'Volstead Lounge', 30.2633, -97.7305, '1500 E 6th St, Austin, TX', '{"amenity": "bar", "name": "Volstead Lounge"}', 1753000000000),
+  ('austin/radio-coffee-beer', 'Radio Coffee & Beer', 30.2298, -97.7852, '4204 Menchaca Rd, Austin, TX', '{"amenity": "pub", "name": "Radio Coffee & Beer"}', 1753000000000),
+  ('austin/cosmic-coffee-beer-garden', 'Cosmic Coffee + Beer Garden', 30.2308, -97.7815, '121 Pickle Rd, Austin, TX', '{"amenity": "pub", "name": "Cosmic Coffee + Beer Garden"}', 1753000000000),
+  ('austin/zilker-brewing-co', 'Zilker Brewing Co.', 30.2631, -97.729, '1701 E 6th St, Austin, TX', '{"amenity": "pub", "name": "Zilker Brewing Co."}', 1753000000000),
+  ('austin/blue-owl-brewing', 'Blue Owl Brewing', 30.2565, -97.7222, '2400 E Cesar Chavez St, Austin, TX', '{"amenity": "pub", "name": "Blue Owl Brewing"}', 1753000000000),
+  ('austin/the-abgb', 'The ABGB', 30.2385, -97.7635, '1305 W Oltorf St, Austin, TX', '{"amenity": "pub", "name": "The ABGB"}', 1753000000000),
+  ('sf/zeitgeist', 'Zeitgeist', 37.7668, -122.4222, '199 Valencia St, San Francisco, CA', '{"amenity": "bar", "name": "Zeitgeist"}', 1753000000000),
+  ('sf/el-rio', 'El Rio', 37.7482, -122.4197, '3158 Mission St, San Francisco, CA', '{"amenity": "bar", "name": "El Rio"}', 1753000000000),
+  ('sf/trick-dog', 'Trick Dog', 37.7592, -122.4108, '3010 20th St, San Francisco, CA', '{"amenity": "bar", "name": "Trick Dog"}', 1753000000000),
+  ('sf/doc-s-clock', 'Doc''s Clock', 37.755, -122.4187, '2575 Mission St, San Francisco, CA', '{"amenity": "bar", "name": "Doc''s Clock"}', 1753000000000),
+  ('sf/500-club', '500 Club', 37.7621, -122.4245, '500 Guerrero St, San Francisco, CA', '{"amenity": "bar", "name": "500 Club"}', 1753000000000),
+  ('sf/vesuvio-cafe', 'Vesuvio Cafe', 37.7973, -122.4073, '255 Columbus Ave, San Francisco, CA', '{"amenity": "bar", "name": "Vesuvio Cafe"}', 1753000000000),
+  ('sf/specs-twelve-adler-museum-cafe', 'Specs'' Twelve Adler Museum Cafe', 37.7967, -122.4082, '12 William Saroyan Pl, San Francisco, CA', '{"amenity": "bar", "name": "Specs'' Twelve Adler Museum Cafe"}', 1753000000000),
+  ('sf/tosca-cafe', 'Tosca Cafe', 37.7975, -122.407, '242 Columbus Ave, San Francisco, CA', '{"amenity": "bar", "name": "Tosca Cafe"}', 1753000000000),
+  ('sf/li-po-cocktail-lounge', 'Li Po Cocktail Lounge', 37.7955, -122.4058, '916 Grant Ave, San Francisco, CA', '{"amenity": "bar", "name": "Li Po Cocktail Lounge"}', 1753000000000),
+  ('sf/buena-vista-cafe', 'Buena Vista Cafe', 37.806, -122.4204, '2765 Hyde St, San Francisco, CA', '{"amenity": "bar", "name": "Buena Vista Cafe"}', 1753000000000),
+  ('sf/bourbon-branch', 'Bourbon & Branch', 37.7853, -122.4131, '501 Jones St, San Francisco, CA', '{"amenity": "bar", "name": "Bourbon & Branch"}', 1753000000000),
+  ('sf/the-homestead', 'The Homestead', 37.7607, -122.4147, '2301 Folsom St, San Francisco, CA', '{"amenity": "bar", "name": "The Homestead"}', 1753000000000),
+  ('sf/smuggler-s-cove', 'Smuggler''s Cove', 37.7767, -122.4241, '650 Gough St, San Francisco, CA', '{"amenity": "bar", "name": "Smuggler''s Cove"}', 1753000000000),
+  ('sf/magnolia-brewing', 'Magnolia Brewing', 37.7702, -122.4402, '1398 Haight St, San Francisco, CA', '{"amenity": "pub", "name": "Magnolia Brewing"}', 1753000000000),
+  ('sf/zam-zam', 'Zam Zam', 37.7695, -122.4485, '1633 Haight St, San Francisco, CA', '{"amenity": "bar", "name": "Zam Zam"}', 1753000000000),
+  ('sf/the-riptide', 'The Riptide', 37.742, -122.4988, '3639 Taraval St, San Francisco, CA', '{"amenity": "bar", "name": "The Riptide"}', 1753000000000),
+  ('sf/trad-r-sam', 'Trad''r Sam', 37.7803, -122.4835, '6150 Geary Blvd, San Francisco, CA', '{"amenity": "bar", "name": "Trad''r Sam"}', 1753000000000),
+  ('sf/house-of-shields', 'House of Shields', 37.7885, -122.4009, '39 New Montgomery St, San Francisco, CA', '{"amenity": "bar", "name": "House of Shields"}', 1753000000000),
+  ('lisbon2/pavilhão-chinês', 'Pavilhão Chinês', 38.7154, -9.1481, 'R. Dom Pedro V 89, Príncipe Real, Lisboa', '{"amenity": "bar", "name": "Pavilhão Chinês"}', 1753000000000),
+  ('lisbon2/foxtrot', 'Foxtrot', 38.7145, -9.1478, 'Tv. Santa Teresa 28, Príncipe Real, Lisboa', '{"amenity": "bar", "name": "Foxtrot"}', 1753000000000),
+  ('lisbon2/solar-do-vinho-do-porto', 'Solar do Vinho do Porto', 38.7148, -9.1461, 'R. de São Pedro de Alcântara 45, Príncipe Real, Lisboa', '{"amenity": "bar", "name": "Solar do Vinho do Porto"}', 1753000000000),
+  ('lisbon2/red-frog-speakeasy', 'Red Frog Speakeasy', 38.7061, -9.1567, 'R. do Instituto Industrial 21A, Santos, Lisboa', '{"amenity": "bar", "name": "Red Frog Speakeasy"}', 1753000000000),
+  ('lisbon2/povo', 'Povo', 38.7071, -9.1451, 'R. de São Paulo 32-36, Cais do Sodré, Lisboa', '{"amenity": "bar", "name": "Povo"}', 1753000000000),
+  ('lisbon2/pé-sujo', 'Pé Sujo', 38.7113, -9.1305, 'Largo de São Martinho 6-7, Alfama, Lisboa', '{"amenity": "bar", "name": "Pé Sujo"}', 1753000000000),
+  ('london/ye-olde-cheshire-cheese', 'Ye Olde Cheshire Cheese', 51.5142, -0.1097, '145 Fleet St, London, UK', '{"amenity": "pub", "name": "Ye Olde Cheshire Cheese"}', 1753000000000),
+  ('london/the-lamb-flag', 'The Lamb & Flag', 51.5115, -0.1257, '33 Rose St, Covent Garden, London, UK', '{"amenity": "pub", "name": "The Lamb & Flag"}', 1753000000000),
+  ('london/the-blackfriar', 'The Blackfriar', 51.5117, -0.1037, '174 Queen Victoria St, London, UK', '{"amenity": "pub", "name": "The Blackfriar"}', 1753000000000),
+  ('london/the-mayflower', 'The Mayflower', 51.501, -0.053, '117 Rotherhithe St, London, UK', '{"amenity": "pub", "name": "The Mayflower"}', 1753000000000),
+  ('london/the-george-inn', 'The George Inn', 51.5031, -0.0904, '75-77 Borough High St, Southwark, London, UK', '{"amenity": "pub", "name": "The George Inn"}', 1753000000000),
+  ('london/the-anchor-bankside', 'The Anchor Bankside', 51.5075, -0.0921, '34 Park St, Southwark, London, UK', '{"amenity": "pub", "name": "The Anchor Bankside"}', 1753000000000),
+  ('london/ye-olde-mitre', 'Ye Olde Mitre', 51.5185, -0.1073, '1 Ely Ct, Holborn, London, UK', '{"amenity": "pub", "name": "Ye Olde Mitre"}', 1753000000000),
+  ('london/the-prospect-of-whitby', 'The Prospect of Whitby', 51.5058, -0.0503, '57 Wapping Wall, London, UK', '{"amenity": "pub", "name": "The Prospect of Whitby"}', 1753000000000),
+  ('london/the-grenadier', 'The Grenadier', 51.5017, -0.1546, '18 Wilton Row, Belgravia, London, UK', '{"amenity": "pub", "name": "The Grenadier"}', 1753000000000),
+  ('london/french-house', 'French House', 51.5136, -0.1329, '49 Dean St, Soho, London, UK', '{"amenity": "bar", "name": "French House"}', 1753000000000),
+  ('london/the-dog-duck', 'The Dog & Duck', 51.5142, -0.1345, '18 Bateman St, Soho, London, UK', '{"amenity": "pub", "name": "The Dog & Duck"}', 1753000000000),
+  ('london/princess-louise', 'Princess Louise', 51.5165, -0.1213, '208 High Holborn, London, UK', '{"amenity": "pub", "name": "Princess Louise"}', 1753000000000),
+  ('london/the-harp', 'The Harp', 51.5099, -0.1268, '47 Chandos Pl, Covent Garden, London, UK', '{"amenity": "pub", "name": "The Harp"}', 1753000000000),
+  ('london/jerusalem-tavern', 'Jerusalem Tavern', 51.5222, -0.1044, '55 Britton St, Clerkenwell, London, UK', '{"amenity": "pub", "name": "Jerusalem Tavern"}', 1753000000000),
+  ('london/the-seven-stars', 'The Seven Stars', 51.5138, -0.1123, '53 Carey St, London, UK', '{"amenity": "pub", "name": "The Seven Stars"}', 1753000000000),
+  ('london/the-ten-bells', 'The Ten Bells', 51.5199, -0.0733, '84 Commercial St, Spitalfields, London, UK', '{"amenity": "pub", "name": "The Ten Bells"}', 1753000000000),
+  ('london/the-old-blue-last', 'The Old Blue Last', 51.5252, -0.0827, '38 Great Eastern St, Shoreditch, London, UK', '{"amenity": "pub", "name": "The Old Blue Last"}', 1753000000000);
+
+-- baseline pub_scores rows so every new pin has a score to render immediately
+INSERT OR IGNORE INTO pub_scores (pub_id, avg_rating, weighted_score, rating_count)
+  SELECT id, 0, 0, 0 FROM pubs;

@@ -1,11 +1,11 @@
 {
   "_meta": {
     "source": "OpenStreetMap and Nominatim",
-    "note": "Pre-event worldwide demo seed. No live venue lookups during the demo.",
+    "note": "Pre-event worldwide demo seed. No live venue lookups during the demo. Austin/SF/London (+6 more Lisbon) added 2026-07-22: real named venues, coordinates are neighborhood-accurate, not a live OSM Overpass pull -- overpass-api.de returned HTTP 406 for every request this session while other hosts worked fine.",
     "city": "Worldwide, centered on Lisbon",
     "generated_at": "2026-07-20T09:00:00Z",
     "center": { "lat": 38.7115, "lon": -9.1445 },
-    "count": 30
+    "count": 91
   },
   "pubs": [
     {
@@ -248,6 +248,494 @@
       "address": "ALLO, Avenida da Índia 10, Lisbon",
       "osm_raw": { "amenity": "pub", "name": "Cloudflare Lisbon", "demo": "yes" },
       "featured": "cloudflare"
+    },
+    {
+      "id": "austin/deep-eddy-cabaret",
+      "name": "Deep Eddy Cabaret",
+      "lat": 30.287,
+      "lon": -97.7676,
+      "address": "2315 Lake Austin Blvd, Austin, TX",
+      "osm_raw": { "amenity": "bar", "name": "Deep Eddy Cabaret" }
+    },
+    {
+      "id": "austin/the-continental-club",
+      "name": "The Continental Club",
+      "lat": 30.254,
+      "lon": -97.7497,
+      "address": "1315 S Congress Ave, Austin, TX",
+      "osm_raw": { "amenity": "bar", "name": "The Continental Club" }
+    },
+    {
+      "id": "austin/the-elephant-room",
+      "name": "The Elephant Room",
+      "lat": 30.2652,
+      "lon": -97.7431,
+      "address": "315 Congress Ave, Austin, TX",
+      "osm_raw": { "amenity": "bar", "name": "The Elephant Room" }
+    },
+    {
+      "id": "austin/container-bar",
+      "name": "Container Bar",
+      "lat": 30.2551,
+      "lon": -97.7391,
+      "address": "90 Rainey St, Austin, TX",
+      "osm_raw": { "amenity": "bar", "name": "Container Bar" }
+    },
+    {
+      "id": "austin/clive-bar",
+      "name": "Clive Bar",
+      "lat": 30.2555,
+      "lon": -97.7378,
+      "address": "609 Davis St, Austin, TX",
+      "osm_raw": { "amenity": "bar", "name": "Clive Bar" }
+    },
+    {
+      "id": "austin/lucky-robot",
+      "name": "Lucky Robot",
+      "lat": 30.2548,
+      "lon": -97.7385,
+      "address": "79 Rainey St, Austin, TX",
+      "osm_raw": { "amenity": "bar", "name": "Lucky Robot" }
+    },
+    {
+      "id": "austin/blackheart-bar",
+      "name": "Blackheart Bar",
+      "lat": 30.2553,
+      "lon": -97.7389,
+      "address": "86 Rainey St, Austin, TX",
+      "osm_raw": { "amenity": "bar", "name": "Blackheart Bar" }
+    },
+    {
+      "id": "austin/dirty-dog-bar",
+      "name": "Dirty Dog Bar",
+      "lat": 30.2669,
+      "lon": -97.7387,
+      "address": "505 E 6th St, Austin, TX",
+      "osm_raw": { "amenity": "bar", "name": "Dirty Dog Bar" }
+    },
+    {
+      "id": "austin/the-iron-bear",
+      "name": "The Iron Bear",
+      "lat": 30.2685,
+      "lon": -97.7469,
+      "address": "301 W 6th St, Austin, TX",
+      "osm_raw": { "amenity": "pub", "name": "The Iron Bear" }
+    },
+    {
+      "id": "austin/coyote-ugly-saloon-austin",
+      "name": "Coyote Ugly Saloon Austin",
+      "lat": 30.2673,
+      "lon": -97.7404,
+      "address": "313 E 6th St, Austin, TX",
+      "osm_raw": { "amenity": "bar", "name": "Coyote Ugly Saloon Austin" }
+    },
+    {
+      "id": "austin/whisler-s",
+      "name": "Whisler's",
+      "lat": 30.2637,
+      "lon": -97.7268,
+      "address": "1816 E 6th St, Austin, TX",
+      "osm_raw": { "amenity": "bar", "name": "Whisler's" }
+    },
+    {
+      "id": "austin/white-horse",
+      "name": "White Horse",
+      "lat": 30.2589,
+      "lon": -97.7241,
+      "address": "500 Comal St, Austin, TX",
+      "osm_raw": { "amenity": "bar", "name": "White Horse" }
+    },
+    {
+      "id": "austin/nickel-city",
+      "name": "Nickel City",
+      "lat": 30.2732,
+      "lon": -97.728,
+      "address": "1133 E 11th St, Austin, TX",
+      "osm_raw": { "amenity": "bar", "name": "Nickel City" }
+    },
+    {
+      "id": "austin/hotel-vegas",
+      "name": "Hotel Vegas",
+      "lat": 30.2634,
+      "lon": -97.7304,
+      "address": "1502 E 6th St, Austin, TX",
+      "osm_raw": { "amenity": "bar", "name": "Hotel Vegas" }
+    },
+    {
+      "id": "austin/volstead-lounge",
+      "name": "Volstead Lounge",
+      "lat": 30.2633,
+      "lon": -97.7305,
+      "address": "1500 E 6th St, Austin, TX",
+      "osm_raw": { "amenity": "bar", "name": "Volstead Lounge" }
+    },
+    {
+      "id": "austin/radio-coffee-beer",
+      "name": "Radio Coffee & Beer",
+      "lat": 30.2298,
+      "lon": -97.7852,
+      "address": "4204 Menchaca Rd, Austin, TX",
+      "osm_raw": { "amenity": "pub", "name": "Radio Coffee & Beer" }
+    },
+    {
+      "id": "austin/cosmic-coffee-beer-garden",
+      "name": "Cosmic Coffee + Beer Garden",
+      "lat": 30.2308,
+      "lon": -97.7815,
+      "address": "121 Pickle Rd, Austin, TX",
+      "osm_raw": { "amenity": "pub", "name": "Cosmic Coffee + Beer Garden" }
+    },
+    {
+      "id": "austin/zilker-brewing-co",
+      "name": "Zilker Brewing Co.",
+      "lat": 30.2631,
+      "lon": -97.729,
+      "address": "1701 E 6th St, Austin, TX",
+      "osm_raw": { "amenity": "pub", "name": "Zilker Brewing Co." }
+    },
+    {
+      "id": "austin/blue-owl-brewing",
+      "name": "Blue Owl Brewing",
+      "lat": 30.2565,
+      "lon": -97.7222,
+      "address": "2400 E Cesar Chavez St, Austin, TX",
+      "osm_raw": { "amenity": "pub", "name": "Blue Owl Brewing" }
+    },
+    {
+      "id": "austin/the-abgb",
+      "name": "The ABGB",
+      "lat": 30.2385,
+      "lon": -97.7635,
+      "address": "1305 W Oltorf St, Austin, TX",
+      "osm_raw": { "amenity": "pub", "name": "The ABGB" }
+    },
+    {
+      "id": "sf/zeitgeist",
+      "name": "Zeitgeist",
+      "lat": 37.7668,
+      "lon": -122.4222,
+      "address": "199 Valencia St, San Francisco, CA",
+      "osm_raw": { "amenity": "bar", "name": "Zeitgeist" }
+    },
+    {
+      "id": "sf/el-rio",
+      "name": "El Rio",
+      "lat": 37.7482,
+      "lon": -122.4197,
+      "address": "3158 Mission St, San Francisco, CA",
+      "osm_raw": { "amenity": "bar", "name": "El Rio" }
+    },
+    {
+      "id": "sf/trick-dog",
+      "name": "Trick Dog",
+      "lat": 37.7592,
+      "lon": -122.4108,
+      "address": "3010 20th St, San Francisco, CA",
+      "osm_raw": { "amenity": "bar", "name": "Trick Dog" }
+    },
+    {
+      "id": "sf/doc-s-clock",
+      "name": "Doc's Clock",
+      "lat": 37.755,
+      "lon": -122.4187,
+      "address": "2575 Mission St, San Francisco, CA",
+      "osm_raw": { "amenity": "bar", "name": "Doc's Clock" }
+    },
+    {
+      "id": "sf/500-club",
+      "name": "500 Club",
+      "lat": 37.7621,
+      "lon": -122.4245,
+      "address": "500 Guerrero St, San Francisco, CA",
+      "osm_raw": { "amenity": "bar", "name": "500 Club" }
+    },
+    {
+      "id": "sf/vesuvio-cafe",
+      "name": "Vesuvio Cafe",
+      "lat": 37.7973,
+      "lon": -122.4073,
+      "address": "255 Columbus Ave, San Francisco, CA",
+      "osm_raw": { "amenity": "bar", "name": "Vesuvio Cafe" }
+    },
+    {
+      "id": "sf/specs-twelve-adler-museum-cafe",
+      "name": "Specs' Twelve Adler Museum Cafe",
+      "lat": 37.7967,
+      "lon": -122.4082,
+      "address": "12 William Saroyan Pl, San Francisco, CA",
+      "osm_raw": { "amenity": "bar", "name": "Specs' Twelve Adler Museum Cafe" }
+    },
+    {
+      "id": "sf/tosca-cafe",
+      "name": "Tosca Cafe",
+      "lat": 37.7975,
+      "lon": -122.407,
+      "address": "242 Columbus Ave, San Francisco, CA",
+      "osm_raw": { "amenity": "bar", "name": "Tosca Cafe" }
+    },
+    {
+      "id": "sf/li-po-cocktail-lounge",
+      "name": "Li Po Cocktail Lounge",
+      "lat": 37.7955,
+      "lon": -122.4058,
+      "address": "916 Grant Ave, San Francisco, CA",
+      "osm_raw": { "amenity": "bar", "name": "Li Po Cocktail Lounge" }
+    },
+    {
+      "id": "sf/buena-vista-cafe",
+      "name": "Buena Vista Cafe",
+      "lat": 37.806,
+      "lon": -122.4204,
+      "address": "2765 Hyde St, San Francisco, CA",
+      "osm_raw": { "amenity": "bar", "name": "Buena Vista Cafe" }
+    },
+    {
+      "id": "sf/bourbon-branch",
+      "name": "Bourbon & Branch",
+      "lat": 37.7853,
+      "lon": -122.4131,
+      "address": "501 Jones St, San Francisco, CA",
+      "osm_raw": { "amenity": "bar", "name": "Bourbon & Branch" }
+    },
+    {
+      "id": "sf/the-homestead",
+      "name": "The Homestead",
+      "lat": 37.7607,
+      "lon": -122.4147,
+      "address": "2301 Folsom St, San Francisco, CA",
+      "osm_raw": { "amenity": "bar", "name": "The Homestead" }
+    },
+    {
+      "id": "sf/smuggler-s-cove",
+      "name": "Smuggler's Cove",
+      "lat": 37.7767,
+      "lon": -122.4241,
+      "address": "650 Gough St, San Francisco, CA",
+      "osm_raw": { "amenity": "bar", "name": "Smuggler's Cove" }
+    },
+    {
+      "id": "sf/magnolia-brewing",
+      "name": "Magnolia Brewing",
+      "lat": 37.7702,
+      "lon": -122.4402,
+      "address": "1398 Haight St, San Francisco, CA",
+      "osm_raw": { "amenity": "pub", "name": "Magnolia Brewing" }
+    },
+    {
+      "id": "sf/zam-zam",
+      "name": "Zam Zam",
+      "lat": 37.7695,
+      "lon": -122.4485,
+      "address": "1633 Haight St, San Francisco, CA",
+      "osm_raw": { "amenity": "bar", "name": "Zam Zam" }
+    },
+    {
+      "id": "sf/the-riptide",
+      "name": "The Riptide",
+      "lat": 37.742,
+      "lon": -122.4988,
+      "address": "3639 Taraval St, San Francisco, CA",
+      "osm_raw": { "amenity": "bar", "name": "The Riptide" }
+    },
+    {
+      "id": "sf/trad-r-sam",
+      "name": "Trad'r Sam",
+      "lat": 37.7803,
+      "lon": -122.4835,
+      "address": "6150 Geary Blvd, San Francisco, CA",
+      "osm_raw": { "amenity": "bar", "name": "Trad'r Sam" }
+    },
+    {
+      "id": "sf/house-of-shields",
+      "name": "House of Shields",
+      "lat": 37.7885,
+      "lon": -122.4009,
+      "address": "39 New Montgomery St, San Francisco, CA",
+      "osm_raw": { "amenity": "bar", "name": "House of Shields" }
+    },
+    {
+      "id": "lisbon2/pavilhão-chinês",
+      "name": "Pavilhão Chinês",
+      "lat": 38.7154,
+      "lon": -9.1481,
+      "address": "R. Dom Pedro V 89, Príncipe Real, Lisboa",
+      "osm_raw": { "amenity": "bar", "name": "Pavilhão Chinês" }
+    },
+    {
+      "id": "lisbon2/foxtrot",
+      "name": "Foxtrot",
+      "lat": 38.7145,
+      "lon": -9.1478,
+      "address": "Tv. Santa Teresa 28, Príncipe Real, Lisboa",
+      "osm_raw": { "amenity": "bar", "name": "Foxtrot" }
+    },
+    {
+      "id": "lisbon2/solar-do-vinho-do-porto",
+      "name": "Solar do Vinho do Porto",
+      "lat": 38.7148,
+      "lon": -9.1461,
+      "address": "R. de São Pedro de Alcântara 45, Príncipe Real, Lisboa",
+      "osm_raw": { "amenity": "bar", "name": "Solar do Vinho do Porto" }
+    },
+    {
+      "id": "lisbon2/red-frog-speakeasy",
+      "name": "Red Frog Speakeasy",
+      "lat": 38.7061,
+      "lon": -9.1567,
+      "address": "R. do Instituto Industrial 21A, Santos, Lisboa",
+      "osm_raw": { "amenity": "bar", "name": "Red Frog Speakeasy" }
+    },
+    {
+      "id": "lisbon2/povo",
+      "name": "Povo",
+      "lat": 38.7071,
+      "lon": -9.1451,
+      "address": "R. de São Paulo 32-36, Cais do Sodré, Lisboa",
+      "osm_raw": { "amenity": "bar", "name": "Povo" }
+    },
+    {
+      "id": "lisbon2/pé-sujo",
+      "name": "Pé Sujo",
+      "lat": 38.7113,
+      "lon": -9.1305,
+      "address": "Largo de São Martinho 6-7, Alfama, Lisboa",
+      "osm_raw": { "amenity": "bar", "name": "Pé Sujo" }
+    },
+    {
+      "id": "london/ye-olde-cheshire-cheese",
+      "name": "Ye Olde Cheshire Cheese",
+      "lat": 51.5142,
+      "lon": -0.1097,
+      "address": "145 Fleet St, London, UK",
+      "osm_raw": { "amenity": "pub", "name": "Ye Olde Cheshire Cheese" }
+    },
+    {
+      "id": "london/the-lamb-flag",
+      "name": "The Lamb & Flag",
+      "lat": 51.5115,
+      "lon": -0.1257,
+      "address": "33 Rose St, Covent Garden, London, UK",
+      "osm_raw": { "amenity": "pub", "name": "The Lamb & Flag" }
+    },
+    {
+      "id": "london/the-blackfriar",
+      "name": "The Blackfriar",
+      "lat": 51.5117,
+      "lon": -0.1037,
+      "address": "174 Queen Victoria St, London, UK",
+      "osm_raw": { "amenity": "pub", "name": "The Blackfriar" }
+    },
+    {
+      "id": "london/the-mayflower",
+      "name": "The Mayflower",
+      "lat": 51.501,
+      "lon": -0.053,
+      "address": "117 Rotherhithe St, London, UK",
+      "osm_raw": { "amenity": "pub", "name": "The Mayflower" }
+    },
+    {
+      "id": "london/the-george-inn",
+      "name": "The George Inn",
+      "lat": 51.5031,
+      "lon": -0.0904,
+      "address": "75-77 Borough High St, Southwark, London, UK",
+      "osm_raw": { "amenity": "pub", "name": "The George Inn" }
+    },
+    {
+      "id": "london/the-anchor-bankside",
+      "name": "The Anchor Bankside",
+      "lat": 51.5075,
+      "lon": -0.0921,
+      "address": "34 Park St, Southwark, London, UK",
+      "osm_raw": { "amenity": "pub", "name": "The Anchor Bankside" }
+    },
+    {
+      "id": "london/ye-olde-mitre",
+      "name": "Ye Olde Mitre",
+      "lat": 51.5185,
+      "lon": -0.1073,
+      "address": "1 Ely Ct, Holborn, London, UK",
+      "osm_raw": { "amenity": "pub", "name": "Ye Olde Mitre" }
+    },
+    {
+      "id": "london/the-prospect-of-whitby",
+      "name": "The Prospect of Whitby",
+      "lat": 51.5058,
+      "lon": -0.0503,
+      "address": "57 Wapping Wall, London, UK",
+      "osm_raw": { "amenity": "pub", "name": "The Prospect of Whitby" }
+    },
+    {
+      "id": "london/the-grenadier",
+      "name": "The Grenadier",
+      "lat": 51.5017,
+      "lon": -0.1546,
+      "address": "18 Wilton Row, Belgravia, London, UK",
+      "osm_raw": { "amenity": "pub", "name": "The Grenadier" }
+    },
+    {
+      "id": "london/french-house",
+      "name": "French House",
+      "lat": 51.5136,
+      "lon": -0.1329,
+      "address": "49 Dean St, Soho, London, UK",
+      "osm_raw": { "amenity": "bar", "name": "French House" }
+    },
+    {
+      "id": "london/the-dog-duck",
+      "name": "The Dog & Duck",
+      "lat": 51.5142,
+      "lon": -0.1345,
+      "address": "18 Bateman St, Soho, London, UK",
+      "osm_raw": { "amenity": "pub", "name": "The Dog & Duck" }
+    },
+    {
+      "id": "london/princess-louise",
+      "name": "Princess Louise",
+      "lat": 51.5165,
+      "lon": -0.1213,
+      "address": "208 High Holborn, London, UK",
+      "osm_raw": { "amenity": "pub", "name": "Princess Louise" }
+    },
+    {
+      "id": "london/the-harp",
+      "name": "The Harp",
+      "lat": 51.5099,
+      "lon": -0.1268,
+      "address": "47 Chandos Pl, Covent Garden, London, UK",
+      "osm_raw": { "amenity": "pub", "name": "The Harp" }
+    },
+    {
+      "id": "london/jerusalem-tavern",
+      "name": "Jerusalem Tavern",
+      "lat": 51.5222,
+      "lon": -0.1044,
+      "address": "55 Britton St, Clerkenwell, London, UK",
+      "osm_raw": { "amenity": "pub", "name": "Jerusalem Tavern" }
+    },
+    {
+      "id": "london/the-seven-stars",
+      "name": "The Seven Stars",
+      "lat": 51.5138,
+      "lon": -0.1123,
+      "address": "53 Carey St, London, UK",
+      "osm_raw": { "amenity": "pub", "name": "The Seven Stars" }
+    },
+    {
+      "id": "london/the-ten-bells",
+      "name": "The Ten Bells",
+      "lat": 51.5199,
+      "lon": -0.0733,
+      "address": "84 Commercial St, Spitalfields, London, UK",
+      "osm_raw": { "amenity": "pub", "name": "The Ten Bells" }
+    },
+    {
+      "id": "london/the-old-blue-last",
+      "name": "The Old Blue Last",
+      "lat": 51.5252,
+      "lon": -0.0827,
+      "address": "38 Great Eastern St, Shoreditch, London, UK",
+      "osm_raw": { "amenity": "pub", "name": "The Old Blue Last" }
     }
   ]
 }

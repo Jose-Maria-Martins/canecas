@@ -44,25 +44,26 @@
       "migrations_dir": "migrations"
     }
   ],
-  "workflows": [
-    {
-      "name": "canecas-photo-assessment",
-      "binding": "PHOTO_WORKFLOW",
-      "class_name": "PhotoAssessmentWorkflow"
-    }
-  ],
+  // PhotoAssessmentWorkflow/PhotoResults/MapSubmissions below belonged to the old src/index.ts
+  // stack. worker/index.ts (the current main) replaced that pipeline with a PHOTO_INFER queue
+  // consumer for AI rating and uses PubAggregatorDO/DemoSimulatorDO instead -- neither of the old
+  // classes are exported from main anymore, which fails deploy validation ("Worker depends on
+  // Durable Objects which are not exported"). No workflow binding is needed: worker/index.ts rates
+  // photos directly in its queue() handler, not via a Workflow.
   "durable_objects": {
     "bindings": [
       {
-        "name": "PHOTO_RESULTS",
-        "class_name": "PhotoResults"
+        "name": "PUB_AGGREGATOR",
+        "class_name": "PubAggregatorDO"
       },
       {
-        "name": "MAP_SUBMISSIONS",
-        "class_name": "MapSubmissions"
+        "name": "DEMO_SIMULATOR",
+        "class_name": "DemoSimulatorDO"
       }
     ]
   },
+  // v1/v2 (PhotoResults/MapSubmissions) are kept as historical record of the old stack's classes --
+  // DO migrations are append-only, so still-unbound old tags are left alone rather than rewritten.
   "migrations": [
     {
       "tag": "v1",
@@ -71,6 +72,10 @@
     {
       "tag": "v2",
       "new_sqlite_classes": ["MapSubmissions"]
+    },
+    {
+      "tag": "v3",
+      "new_sqlite_classes": ["PubAggregatorDO", "DemoSimulatorDO"]
     }
   ]
 }
