@@ -1,0 +1,19 @@
+package-lock.json
+  s_3d53a65f53ccbc::t_25825bf8d2d0e8 68-84,100-150
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "dd05b24844c4425aee14a7d1956476e784380b6b",
+  "prompts": {},
+  "sessions": {
+    "s_3d53a65f53ccbc": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_074ec4408ffeIOQpBIt3fgVqLs",
+        "model": "claude-sonnet-5"
+      },
+      "human_author": "ddacruz <ddacruz@cloudflare.com>"
+    }
+  }
+}
