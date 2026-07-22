@@ -1,0 +1,19 @@
+spec.md
+  s_41cf88c699a376::t_907fee61d82b58 1-253
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "351132274d98055565d8acfbaf8dd3bf6b75da30",
+  "prompts": {},
+  "sessions": {
+    "s_41cf88c699a376": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_07536a966ffeB24tknpazwTw92",
+        "model": "claude-sonnet-5"
+      },
+      "human_author": "ddacruz <ddacruz@cloudflare.com>"
+    }
+  }
+}
