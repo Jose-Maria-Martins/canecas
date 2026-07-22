@@ -50,54 +50,57 @@ approach, auth flow, deployment plan, and a per-person task breakdown for the 3 
 
 - No .gitignore exists yet. Engineer should add one (and a TASKS.md entry in it) on its first invocation.
 
-## Design Report (Round 1, from architect)
+## Design Report (Round 2, revised — supersedes Round 1)
 
 ### 1. High-level architecture
-- Frontend SPA (MapLibre + React/Tailwind) hosted on Cloudflare Pages (static assets + Pages Functions
-  if needed), talks to a REST/JSON API on a dedicated Workers service.
-- Workers API (TypeScript): routes /auth, /pubs, /photos, /feed, /beerreal, /challenge, etc. Stateless,
-  per-route bindings to KV, D1, R2, DOs, Queues, AI.
-- Data stores: D1 (relational — users, pubs, submissions, XP), KV (sessions + Overpass cache + feature
-  flags), R2 (raw beer photo objects), Durable Objects (① per-user FeedRoom, ② pub RatingAggregator,
-  ③ dev DemoSimulator), Queues (photo → AI decoupling).
-- AI pipeline: photo → Queue → consumer Worker → Workers AI vibe-rating model → D1 update.
-- Real-time: client WebSocket ⇔ DO FeedRoom streaming JSON events (buddy check-ins, new photos,
-  level-ups).
-- Only non-Cloudflare pieces: MapLibre tile CDN + OSM Overpass API (read-only), justified since
-  Cloudflare has no maps product.
+- Single Workers project ("caneca") serves both the SPA (Vite + React + MapLibre, built to `dist/` and
+  attached via Workers static assets) and the API — no separate Pages project, so no cross-origin or
+  cross-domain-cookie concerns.
+- Routes on one hostname: `/api/*` REST JSON (auth, pubs, photos, feed, beerreal, challenges), plus
+  `/ws/pub/:pubId` WebSocket for the live pub-score stream only.
+- Data stores: D1 (relational), KV (sessions/cache), R2 (private, beer-photo objects), Durable Objects
+  (PubAggregatorDO per pub, DemoSimulatorDO for fake activity), Queues (photo → AI decoupling).
+- Buddy/social feed is polling-based (D1 `activities` table), not WebSocket — see §6 for why.
+- Only non-Cloudflare pieces: MapLibre tile CDN + a one-time pre-event OSM Overpass pull to seed pub
+  data (no live Overpass calls during the demo) — justified since Cloudflare has no maps product.
 
 ### 2. Cloudflare product mapping
-- Frontend hosting: Cloudflare Pages + Pages Functions — architect asserts "current docs (2026-07)
-  state Pages is preferred for SPAs." **UNVERIFIED — flagged for challenger/security to fact-check**,
-  since Cloudflare's guidance has been shifting toward Workers + static assets for new projects.
-- API/compute: Cloudflare Workers (separate service from Pages) for routing/secrets isolation.
-- Relational data: D1 (SQLite-compat, fits hackathon scale).
-- Image storage: R2, signed URLs to avoid proxying blobs through Workers.
-- Vision scoring: Workers AI, model slug given as "@cf/unum/uform-v1" — **UNVERIFIED — flagged**,
-  a uform-family image-to-text model exists in the Workers AI catalog but the exact slug needs
-  confirming before treating it as final.
+- Static assets + API: Cloudflare Workers with static assets (single project/deploy) — avoids the
+  split-deploy CORS/cookie issues Round 1 had with a separate Pages project.
+- Relational data: D1.
+- Image storage: R2, private bucket "caneca-photos", ULID-named objects, short-TTL signed URLs.
+  Making the bucket public is explicitly ruled out, including as a time-pressure shortcut (see §11).
+- Vision scoring: Workers AI model `@cf/llava-hf/llava-1.5-7b-hf` (Image-to-Text, <1s inference) — replaces the
+  Round 1 slug `@cf/unum/uform-v1`, which does not exist in the Workers AI catalog.
 - Async: Workers Queues, decouples upload latency from AI inference.
-- Real-time feed: Durable Objects + WebSockets, per-user room + fan-out.
-- Caching/sessions: Workers KV, <1ms reads, TTL for magic-link session tokens + Overpass JSON blobs.
-- Cron: Workers Cron Triggers — daily BeerReal prompt 10:00, weekly challenge rotation Sun 00:00.
-- Email auth: Cloudflare Email Sending (beta) for magic-link emails, avoids third-party ESP.
-- Abuse control: Turnstile on photo submission + Cloudflare Rate Limiting Rules on /photos & AI queue.
-- Map tiles: MapLibre GL JS + OSM/MapTiler CDN (documented exception, no CF maps product).
+- Real-time pub scores: Durable Objects (PubAggregatorDO) + WebSockets — scoped to pub-score updates
+  only, not the buddy feed (see §6).
+- Caching/sessions: Workers KV.
+- Cron: Workers Cron Triggers — daily BeerReal prompt, weekly challenge rotation.
+- Email auth: Cloudflare Email Sending, for magic-link emails.
+- Abuse control: Turnstile + Cloudflare Rate Limiting Rules on **both** `/api/photos` and
+  `/api/auth/magic-link` (Round 1 only covered photos, leaving magic-link open to email-bombing).
+- Map tiles: MapLibre GL JS + OSM tiles (documented exception, no CF maps product).
 
 ### 3. D1 schema sketch
 - users(id PK ULID, email UNIQUE, display_name, created_at, xp, level)
 - sessions: KV key "sess:{token}" → userId, TTL 24h (not D1)
-- pubs(id PK osm_id, name, lat, lon, address, osm_raw JSON, created_at)
-- submissions(id PK ULID, user_id FK, pub_id FK, photo_url [R2 key], rating REAL 0-5 [set by AI],
-  created_at)
-- pub_scores(pub_id PK, avg_rating, weighted_score, rating_count) — materialized by aggregator DO
-- buddies(user_id FK, buddy_id FK, PK(user_id, buddy_id))
+- pubs(id PK osm_id, name, lat, lon, address, osm_raw JSON, created_at) — seeded once from Overpass
+  pre-event into a static JSON, loaded at deploy time; no live fetching during the demo
+- submissions(id PK ULID, user_id FK, pub_id FK, photo_url [R2 key, ULID-based], rating REAL 0-5
+  [set by AI only, no client-writable override path], created_at)
+- pub_scores(pub_id PK, avg_rating, weighted_score, rating_count) — materialized by PubAggregatorDO
+- buddies(user_id FK, buddy_id FK, status TEXT CHECK('pending','accepted') DEFAULT 'pending',
+  PK(user_id, buddy_id)) — feed visibility gated on status='accepted' (Round 1 had no status column,
+  which modeled unilateral following instead of mutual consent)
 - challenges(id PK, type ['daily'|'weekly'], title, xp, starts_at, ends_at)
 - challenge_completions(challenge_id FK, user_id FK, completed_at, PK(challenge_id, user_id))
 - beerreal_prompts(id PK, prompt, created_at)
 - beerreal_responses(id PK, prompt_id FK, user_id FK, submission_id FK, created_at)
+- activities(id PK, user_id FK, type, target_id, ts, demo BOOLEAN DEFAULT 0) — new table backing the
+  polled buddy feed; demo rows have `demo=1` and a `demo_`-prefixed user_id, never a real user's id
 
-### 4. Pub aggregate-rating formula
+### 4. Pub aggregate-rating formula (unchanged)
 Bayesian/IMDB-style weighted average:
 `weighted_score = (v / (v + m)) * R + (m / (v + m)) * C`
 where R = mean rating for the pub, v = number of ratings for the pub, m = 5 (minimum-ratings
@@ -105,83 +108,106 @@ confidence constant), C = global mean rating across all pubs (kept as a daily KV
 stay near the global mean until 5+ photos are submitted.
 
 ### 5. AI pipeline
-1. POST /photos (auth'd) → Worker validates Turnstile, writes to R2, enqueues {submissionId, r2Key},
-   returns 202.
-2. Queue consumer: fetches R2 object, calls Workers AI with prompt "Rate the vibe of this beer photo
-   from 0 (unappealing) to 5 (excellent) as a float," parses float, updates submissions.rating, notifies
-   RatingAggregator DO via internal fetch.
-3. RatingAggregatorDO (one per pub_id): recalculates v/R/weighted_score, persists pub_scores, broadcasts
-   `{type:"pubScore", pubId, weightedScore}` to connected FeedRoom DOs.
-- Flagged fallback: if inference is fast enough, Queue could be skipped and call made synchronously
-  (see risk list below) — architect lists Queue removal as an explicit cut-first fallback, not core.
+1. `POST /api/photos` (Turnstile-checked, rate-limited) → Worker writes to R2 (key `sub_<ULID>.jpg`),
+   enqueues `{submissionId, r2Key}`, returns 202.
+2. Queue consumer: fetches R2 object, calls Workers AI (`@cf/llava-hf/llava-1.5-7b-hf`) with prompt "You are
+   rating a beer photo from 0 (awful) to 5 (amazing). Answer with ONLY a number (0-5)," parses the
+   float, updates `submissions.rating`, notifies PubAggregatorDO via internal fetch.
+3. PubAggregatorDO (one per pub_id): recalculates v/R/weighted_score, persists `pub_scores`, broadcasts
+   `{t:"pubScore", pubId, score}` to connected WebSocket clients on `/ws/pub/:pubId`.
+- Fallback: `AI_OFF` env toggle returns a stubbed random rating 2-4 if inference latency/quota becomes
+  a problem.
 
 ### 6. Real-time design
-- FeedRoomDO (name "feed:{userId}"): verifies session token HMAC on WS connect, loads buddy ids,
-  subscribes to their activity, broadcasts JSON lines like
-  `{"t":"checkin"|"rating"|"level","uid":...,"pub":{...},"val":...,"ts":...}`.
-- RatingAggregatorDO: per-pub, as above.
-- DemoSimulatorDO ("simulator"): pushes fake events every 3s during the demo on a separate
-  namespace/binding flagged `DEMO=true`, explicitly kept separate from the production path so fake and
-  real data aren't conflated.
+- PubAggregatorDO: as above — the only thing still on WebSockets, because it's one DO per pub with no
+  fan-out problem.
+- Buddy/social feed: **not** WebSocket-based (Round 1's per-user FeedRoomDO cross-subscription design
+  had no real DO-to-DO pub/sub mechanism in Cloudflare and wasn't buildable in 3 hours). Instead: the
+  Worker writes a row into `activities` on every submission/level-up/check-in; the client polls
+  `GET /api/feed?since=<ts>` every 4s, and the query joins only `buddies` rows with `status='accepted'`.
+- DemoSimulatorDO: writes fake rows into `activities` with `demo=1` and `demo_`-prefixed user ids. The
+  `demo` boolean is returned by the API and used by the UI to visibly label simulated activity — the
+  separation is enforced both structurally (no binding path from the simulator to `pub_scores` or real
+  user attribution) and on the wire (every simulated event is tagged, not just DO-isolated).
 
 ### 7. Auth flow
-1. POST /auth/magic-link: Worker generates token (ULID + HMAC(email, secret)), stores in KV TTL 15min,
-   sends email via CF Email Service with a /verify?token=... link.
-2. GET /auth/verify: validates token+TTL, upserts user in D1, issues session cookie
-   (`Set-Cookie: caneca_sess={signedToken}; Secure; HttpOnly; Path=/; Max-Age=86400`).
+1. `POST /api/auth/magic-link`: requires Turnstile, rate-limited (3 req / 10 min / IP). Token = ULID +
+   HMAC(email, secret), stored in KV `ml:<token>` TTL 15 min, emailed via CF Email Service.
+2. `GET /api/auth/verify`: validates token + TTL, **deletes the KV entry on first successful verify**
+   (single-use, not just TTL-bounded), upserts user in D1, issues session cookie:
+   `Set-Cookie: caneca_sess=<signedULID>; Max-Age=86400; Secure; HttpOnly; SameSite=Lax`.
 3. Subsequent REST calls: cookie → KV lookup → userId.
-4. WebSocket auth: frontend re-signs the cookie value with a SHA256 UA salt, passes via
-   `Sec-WebSocket-Protocol: sess,<sig>`; FeedRoomDO validates before accepting the connection.
+4. WebSocket auth: the upgrade request is a normal HTTP request and carries the `Cookie` header
+   same-origin; the Worker/DO reads it directly and does the same KV session lookup as REST. (Round 1's
+   "frontend re-signs the cookie with a UA salt" scheme is dropped — it was self-contradictory, since an
+   `HttpOnly` cookie can't be read by frontend JS to re-sign in the first place, and added complexity
+   without real security value.)
 
 ### 8. BeerReal
-Cron 10:00 local → Worker inserts a beerreal_prompts row, emits `{t:"beerreal", promptId, text}` to
-every online FeedRoomDO. Frontend shows a modal; the next photo upload is tagged with promptId; on
-completion the user gains XP via challenges (type=daily).
+Daily Cron → Worker inserts a `beerreal_prompts` row **and** an `activities` row (so it surfaces via the
+polled feed like any other event). Frontend shows a modal; the next photo upload is tagged with
+`promptId`; completion grants XP via `challenges` (type=daily).
 
 ### 9. Deployment plan
-- Pages project "caneca-web" (main branch → production, `npm run build` → /dist).
-- Workers project "caneca-api" with wrangler.toml bindings: D1 `caneca_db`, KV `SESSIONS`/
-  `GLOBAL_CACHE`, R2 `BEER_PHOTOS`, Queue `PHOTO_INFER`, AI `uform`, DOs `FEED_ROOM`/`PUB_AGG`/
-  `SIMULATOR`, Email binding.
-- `wrangler deploy` once during the build; Cron + Queues via wrangler. DNS: caneca.dev → Pages,
-  api.caneca.dev → Workers route, CORS allow *.caneca.dev.
+- Single Workers project "caneca": `wrangler.jsonc` with `main = "src/index.ts"`, static assets
+  directory `./dist` (serves the built SPA from the same Worker/deploy).
+- Bindings: D1 `caneca_db`, KV `SESSIONS`/`GLOBAL_CACHE`, R2 `BEER_PHOTOS`, Queue `PHOTO_INFER`, AI
+  binding, DO namespaces `PUB_AGGREGATOR` + `DEMO_SIMULATOR`, Email binding, Turnstile secret.
+- `wrangler deploy` once during the build; Cron + Queues configured via wrangler. DNS: `caneca.dev` →
+  the Worker route. No separate Pages domain, so no CORS configuration needed.
 
 ### 10. 3-hour task breakdown (by layer)
 - T-0:00–0:15 (all): kickoff, clone repo, CF account/token access.
-- Dev A (map/frontend): 0:15-1:10 Vite+React+MapLibre scaffold & pub markers; 1:10-2:00 photo upload
-  UI, BeerReal modal, buddy feed sidebar (WS); 2:00-2:45 challenge/XP display, Turnstile widget,
-  polish; 2:45-3:00 smoke test/deploy Pages.
-- Dev B (gamification/backend logic): 0:15-0:45 D1 schema + wrangler bindings + migration;
-  0:45-1:45 /pubs (Overpass fetch+cache), /challenge, XP update, pub score endpoint;
-  1:45-2:45 RatingAggregatorDO; 2:45-3:00 seed DB + run demo feed simulator.
-- Dev C (AI+photo pipeline): 0:15-0:45 R2 + signed URL + /photos handler incl. Turnstile verify;
-  0:45-1:15 PHOTO_INFER queue + enqueue logic; 1:15-2:00 queue consumer calling Workers AI;
-  2:00-2:30 hook to RatingAggregatorDO + local test; 2:30-3:00 load test w/ 10 sample images.
-- Dev D (auth+data/infra): 0:15-0:40 magic-link flow, Email service setup, session cookie util;
-  0:40-1:30 FeedRoomDO auth handshake/WS upgrade; 1:30-2:15 Cron triggers (BeerReal + weekly
-  challenge); 2:15-2:45 rate-limiting rules (dashboard), Turnstile secret intake; 2:45-3:00 e2e auth
-  walkthrough.
+- Dev A (map/frontend): 0:15-0:55 SPA/map scaffold, pub markers from the pre-seeded static JSON;
+  0:55-1:40 photo upload UI + Turnstile widget, buddy feed polling UI with a demo-flag badge;
+  1:40-2:45 leaderboard/challenge/XP display, cookie handling, polish; 2:45-3:00 smoke test/deploy.
+- Dev B (gamification/backend logic): 0:15-0:45 D1 migrations incl. `buddies.status` and
+  `activities`; 0:45-1:30 `/api/feed` query + pagination, `/api/challenge`, XP update; 1:30-2:30
+  PubAggregatorDO + WebSocket route; 2:30-3:00 seed data + run the demo simulator.
+- Dev C (AI + photo pipeline): 0:15-0:45 R2 signed URLs (ULID keys) + `/api/photos` handler incl.
+  Turnstile; 0:45-1:15 Queue + enqueue logic; 1:15-2:00 queue consumer calling Workers AI
+  (`@cf/llava-hf/llava-1.5-7b-hf`); 2:00-2:30 hook to PubAggregatorDO + a `rating.test.ts` vitest check;
+  2:30-3:00 load test with sample images.
+- Dev D (auth + infra): 0:15-0:35 Turnstile + rate-limit on magic-link; 0:35-1:10 magic-link
+  token store/consume with single-use invalidation; 1:10-1:40 session cookie helper (`SameSite=Lax`)
+  + cookie-based WS auth; 1:40-2:15 Cron triggers (BeerReal, weekly challenge), demo simulator writer;
+  2:15-2:45 `wrangler deploy` + full bindings wiring; 2:45-3:00 e2e auth walkthrough.
 - Integration gates: 1:45 API route signatures frozen; 2:45 cross-layer system test; 3:00 submission.
 
 ### 11. Risk flags & cut-first fallbacks
-- Workers AI latency/quota exhaustion → stub random rating 2-4 behind `AI_OFF` env toggle.
-- Queue consumer complexity → call AI synchronously in /photos handler, drop the Queue binding.
-- Email sending delays → dev-mode auth bypass via `?devEmail=` query param on Pages preview.
-- WebSocket handshake bugs → poll /feed every 3s over HTTP until fixed.
-- Map/Overpass rate limits → preload a static list of 20 pubs from repo JSON, skip live fetch.
+- Workers AI latency/quota exhaustion → `AI_OFF` env toggle stubs a random rating 2-4.
+- WebSocket failure (pub-score stream only now) → fall back to polling `/api/pub/:id/score` every 5s;
+  the buddy feed is unaffected since it already polls.
+- Email sending delays → dev-mode auth bypass via `?devEmail=` query param.
+  **OPEN TODO, not yet resolved (see Log "Round 2 verdicts"):** this lost its "Pages preview only"
+  scoping when the design collapsed to a single Worker/single deploy — as worded it's an unscoped full
+  login bypass reachable on the one production URL judges hit. Before Dev D wires this up, either (a)
+  gate it behind a build-time-only flag that is guaranteed false in the deployed production build, or
+  (b) drop this fallback entirely (email-sending delay risk is arguably better mitigated now anyway
+  since Overpass/pub-data is pre-seeded and the rest of the stack has few other live-external-service
+  dependencies left). Team decides at implementation time — not resolved by design review.
+- Pub data → pre-generate a static JSON seed from Overpass before the event; no live Overpass calls
+  during the demo at all (simpler and more reliable for judges than a live-cache design).
 - BeerReal Cron time overrun → manual "Generate prompt" admin-route button.
+- R2 bucket must never be made public as a time-pressure shortcut — signed URLs only; if the signing
+  util is buggy under time pressure, extend the TTL rather than making the bucket public.
+- EXIF/GPS metadata in uploaded photos is a known gap — flagged for post-hackathon hardening, not
+  in scope for the 3-hour build.
+- Minimal automated test plan (non-blocking for deploy, but should exist before the demo):
+  `rating.test.ts` (Bayesian formula vs. hand-computed cases), `feed.test.ts` (buddies.status
+  filtering correctness), run via `npm test`.
 - Each cut is designed to retain core pub-crawl, photo-rating, and leaderboard demo value.
 
 ### Initial setup checklist (plan-level, no code written)
-wrangler.toml with all bindings & migrations; Pages project linked to main; R2 bucket "caneca-photos";
-D1 DB "caneca_db" + migration 001.sql; Queue "photo_infer"; Email domain verified + Turnstile keys
-issued; Rate Limiting rule template saved but disabled until live test.
+`wrangler.jsonc` with all bindings & migrations; R2 bucket "caneca-photos" (private); D1 DB
+"caneca_db" + migration `001.sql` (incl. `buddies.status`, `activities` table); Queue "photo_infer";
+Email domain verified + Turnstile keys issued; pub seed JSON generated from Overpass pre-event.
 
 ## Sessions
 
-- architect: ses_0756b992effeC13yH46cbhdh8M (resumed 0x)
-- challenger: ses_075686366ffe74AoN0gzSMkjSA (resumed 0x)
-- security: ses_0756841eaffepajdDgo7589tRQ (resumed 0x)
+- architect: ses_0756b992effeC13yH46cbhdh8M (resumed 1x)
+- challenger: ses_075686366ffe74AoN0gzSMkjSA (resumed 1x)
+- security: ses_0756841eaffepajdDgo7589tRQ (resumed 1x)
 - engineer: not started
 - qa: not started
 
@@ -224,3 +250,46 @@ issued; Rate Limiting rule template saved but disabled until live test.
     deploy, D1 migration, resource creation, secret provisioning) for the Manager to hold until
     engineer's stage, not architect's.
   - Routed: full consolidated feedback sent back to architect (same session) for revision.
+
+- Round 2 (design revision): architect addressed all required + folded-in items. Design Report section
+  above now reflects Round 2 directly (Round 1 content replaced, not kept side by side). Key changes:
+  real model slug `@cf/llava-hf/llava-1.5-7b-hf`; single Workers-with-static-assets project (no Pages split);
+  buddy feed moved from WS fan-out to D1-polling (`activities` table); WS auth reads `Cookie` header
+  server-side instead of the broken re-sign scheme; Turnstile+rate-limit added to magic-link;
+  `buddies.status`, cookie `SameSite=Lax`, single-use magic-link tokens, `demo:true`-tagged activity
+  rows with `demo_`-prefixed ids, ULID R2 keys, and a minimal vitest plan all folded in; Overpass moved
+  to a one-time pre-event seed instead of live fetching. Sent back to challenger + security (same
+    sessions as Round 1) to verify the fixes actually land.
+
+- Round 2 verdicts: **WARN (challenger) / FAIL (security)** → aggregate FAIL. Both Round 1 blocking
+  items confirmed genuinely resolved by both reviewers (not reworded). This is the 2nd consecutive
+  FAILed round on the design phase → per policy, stopping the auto-loop here and surfacing to the user
+  instead of re-invoking architect a 3rd time.
+  - Challenger WARN: model slug still wrong — `@cf/llava-hf/llava-1.5-7b-hf` is missing the `llava-hf`
+    namespace segment; correct catalog id is `@cf/llava-hf/llava-1.5-7b-hf`. Everything else
+    (single-Worker topology, D1-polling buddy feed, vitest plan) confirmed sound and buildable in 3h.
+  - Security FAIL (1 blocking, newly introduced by the Round 2 redesign, not a Round 1 leftover): the
+    `?devEmail=` dev-auth-bypass fallback (risk list) lost its "Pages preview only" scoping when the
+    redesign collapsed to a single Worker/single deploy — as worded it's now an unscoped full auth
+    bypass reachable on the one production URL judges hit. Needs an explicit build-time gate, or should
+    be dropped now that the separate preview environment it relied on no longer exists.
+  - Security non-blocking (worth folding in if there's another pass): BeerReal admin-route button has
+    no admin/role concept anywhere in the schema (miss carried from Round 1, caught now) — needs a
+    shared-secret header or hardcoded allowlist gate; `buddies.status` transition should be
+    authorized so only the invited party (not the requester) can accept; new `/api/feed` should scope
+    strictly to the authenticated session's own user id (IDOR discipline) and `demo` must not be
+    client-writable; magic-link rate limit is IP-only, a per-email cap would be more complete; secrets
+    must go through `wrangler secret put` now that everything is consolidated into one Worker/one
+    blast radius.
+  - T2 gate list reconfirmed (simplified — no more api.caneca.dev/CORS entries): DNS for caneca.dev,
+    the single `wrangler deploy` (unambiguously production-from-first-deploy now), D1 migration incl.
+    `buddies.status`/`activities`,     R2/D1/Queue/Turnstile/Email resource creation, secret provisioning.
+
+- **Design phase closed by user decision**: presented with the 2 remaining items (devEmail-bypass
+  scoping [blocking-per-security], model slug [WARN-per-challenger]), user chose "accept as-is with
+  these as documented TODOs" rather than a 3rd revision round. Model slug corrected directly in the
+  Design Report text above (unambiguous factual fix, sourced from challenger's exact string). devEmail
+  bypass scoping left as an explicit open TODO inline in §11 for whoever implements Dev D's part — not
+  resolved by design review, by the user's explicit choice. Design report is now FINAL for this round.
+  Not proceeding to engineer/qa yet — this was a report/design request, not a build request. Awaiting
+  user direction on whether to scaffold the project next.
