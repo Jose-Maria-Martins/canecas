@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { Challenge, LeaderboardEntry, Pub, PubScore, BeerRealPrompt } from "./types";
 import { api } from "./api/client";
-import { IS_MOCK } from "./config";
+import { IS_MOCK, CITY } from "./config";
 import { distanceMeters } from "./api/scoring";
 import { useSession } from "./hooks/useSession";
 import { useGeolocation } from "./hooks/useGeolocation";
@@ -14,6 +14,7 @@ import { Challenges } from "./components/Challenges";
 import { XpBar } from "./components/XpBar";
 import { AuthModal } from "./components/AuthModal";
 import { BeerRealModal } from "./components/BeerRealModal";
+import { pubPhoto } from "./components/scoreColor";
 
 type Tab = "feed" | "board" | "quests";
 interface Toast {
@@ -28,12 +29,15 @@ export default function App() {
 
   const [pubs, setPubs] = useState<Pub[]>([]);
   const [scores, setScores] = useState<Record<string, PubScore>>({});
+  const [photos, setPhotos] = useState<Record<string, string>>({});
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [focus, setFocus] = useState<{ lat: number; lon: number; zoom?: number } | null>(null);
   const [flashPubId, setFlashPubId] = useState<string | null>(null);
   const [bumped, setBumped] = useState(false);
+  const [dark, setDark] = useState(false);
 
   const [tab, setTab] = useState<Tab>("feed");
+  const [sheetOpen, setSheetOpen] = useState(false);
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [challenges, setChallenges] = useState<Challenge[]>([]);
 
@@ -125,13 +129,26 @@ export default function App() {
     [pubs, selectedId],
   );
 
+  // top pubs get a floating name label on the map
+  const featuredIds = useMemo(() => {
+    const ranked = [...pubs].sort(
+      (a, b) => (scores[b.id]?.weighted_score ?? 0) - (scores[a.id]?.weighted_score ?? 0),
+    );
+    return new Set(ranked.slice(0, 4).map((p) => p.id));
+  }, [pubs, scores]);
+
   const selectPub = useCallback((pubId: string) => {
     setSelectedId(pubId);
+    setSheetOpen(false);
   }, []);
 
   useEffect(() => {
     if (selectedPub) setFocus({ lat: selectedPub.lat, lon: selectedPub.lon, zoom: 16 });
   }, [selectedPub]);
+
+  const setPhoto = useCallback((pubId: string, url: string) => {
+    setPhotos((prev) => ({ ...prev, [pubId]: url }));
+  }, []);
 
   async function nearMe() {
     const coords = await geo.locate();
@@ -140,7 +157,6 @@ export default function App() {
       return;
     }
     setFocus({ ...coords, zoom: 15.5 });
-    // select the closest pub
     let best: { id: string; d: number } | null = null;
     for (const p of pubs) {
       const d = distanceMeters(coords, p);
@@ -159,7 +175,6 @@ export default function App() {
 
   function snapBeerReal() {
     if (beerreal) setBeerrealDismissed(beerreal.id);
-    // steer the user to a pub to fulfil it
     const target = geo.coords
       ? [...pubs].sort((a, b) => distanceMeters(geo.coords!, a) - distanceMeters(geo.coords!, b))[0]
       : pubs[0];
@@ -167,89 +182,149 @@ export default function App() {
   }
 
   const beerrealOpen = !!beerreal && beerrealDismissed !== beerreal.id;
+  const pillThumbs = pubs.slice(0, 4);
 
   return (
-    <div className="app">
+    <div className="app" onClick={() => sheetOpen && setSheetOpen(false)}>
       <div className="stage">
         <MapView
           pubs={pubs}
           scores={scores}
+          photos={photos}
+          featuredIds={featuredIds}
           selectedId={selectedId}
           onSelectPub={selectPub}
           me={geo.coords}
           focus={focus}
           flashPubId={flashPubId}
+          dark={dark}
         />
 
-        <div className="topbar">
-          <div className="brand">
-            <span className="mug">🍺</span>
-            Caneca
-            <span className="dot" title="live" />
+        <div className="stickers" aria-hidden>
+          <div className="sticker s1">🍺</div>
+          <div className="sticker s2">🍻</div>
+          <div className="sticker s3">🍷</div>
+        </div>
+
+        <div className="top-left">
+          <div className="city">
+            {CITY.name}
+            <small>.</small>
           </div>
-          <div className="spacer" />
+        </div>
+
+        <div className="top-right">
           {user ? (
             <>
               <XpBar user={user} />
-              <button className="btn ghost sm" onClick={() => void logout()}>
-                Sign out
+              <button
+                className="avatar-btn"
+                title={`${user.display_name} · sign out`}
+                onClick={() => void logout()}
+              >
+                {user.display_name.charAt(0).toUpperCase()}
               </button>
             </>
           ) : (
-            <button className="btn primary" onClick={() => setShowAuth(true)}>
+            <button className="btn primary sm" onClick={() => setShowAuth(true)}>
               Sign in
             </button>
           )}
         </div>
 
-        <div className="map-fabs">
-          <button className="fab" onClick={() => void nearMe()} disabled={geo.loading}>
-            📍 {geo.loading ? "Locating…" : "Pubs near me"}
+        <div className="fab-stack">
+          <button
+            className="fab"
+            title={dark ? "Light map" : "Dark map"}
+            onClick={(e) => {
+              e.stopPropagation();
+              setDark((d) => !d);
+            }}
+          >
+            {dark ? "☀️" : "🌙"}
+          </button>
+          <button
+            className={"fab" + (geo.loading ? " locating" : "")}
+            title="Pubs near me"
+            onClick={(e) => {
+              e.stopPropagation();
+              void nearMe();
+            }}
+          >
+            {geo.loading ? "…" : "📍"}
           </button>
         </div>
 
-        {selectedPub && (
-          <PubPanel
-            pub={selectedPub}
-            score={scores[selectedPub.id]}
-            scoreBumped={bumped}
-            user={user}
-            onClose={() => setSelectedId(null)}
-            onRequireAuth={() => setShowAuth(true)}
-            onToast={onToastAndRefresh}
-          />
-        )}
+        {IS_MOCK && <div className="mockflag">mock API · standalone demo</div>}
       </div>
 
-      <aside className="rail">
-        <div className="rail-head">
-          <button className={"tab" + (tab === "feed" ? " active" : "")} onClick={() => setTab("feed")}>
-            Feed
-          </button>
-          <button className={"tab" + (tab === "board" ? " active" : "")} onClick={() => setTab("board")}>
-            Leaderboard
-          </button>
-          <button className={"tab" + (tab === "quests" ? " active" : "")} onClick={() => setTab("quests")}>
-            Quests
-          </button>
-        </div>
-        <div className="rail-body">
-          {beerrealOpen && tab === "feed" && (
-            <div className="beerreal">
-              <div className="kicker">⚡ BeerReal live</div>
-              <div style={{ fontSize: 13.5, margin: "6px 0 10px", lineHeight: 1.4 }}>
-                {beerreal!.prompt}
-              </div>
-              <button className="btn primary sm" onClick={snapBeerReal}>
-                Snap my pint
+      {selectedPub ? (
+        <PubPanel
+          pub={selectedPub}
+          score={scores[selectedPub.id]}
+          scoreBumped={bumped}
+          user={user}
+          photo={photos[selectedPub.id]}
+          onClose={() => setSelectedId(null)}
+          onRequireAuth={() => setShowAuth(true)}
+          onToast={onToastAndRefresh}
+          onPhoto={setPhoto}
+        />
+      ) : (
+        <>
+          {!sheetOpen && (
+            <div className="bottom">
+              <button
+                className="places-pill"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSheetOpen(true);
+                }}
+              >
+                <span className="stack">
+                  {pillThumbs.map((p) => (
+                    <i key={p.id} style={{ backgroundImage: `url(${photos[p.id] ?? pubPhoto(p)})` }} />
+                  ))}
+                </span>
+                {pubs.length} pubs
               </button>
             </div>
           )}
-          {tab === "feed" && <Feed activities={feed} />}
-          {tab === "board" && <Leaderboard rows={leaderboard} />}
-          {tab === "quests" && <Challenges challenges={challenges} />}
-        </div>
-      </aside>
+
+          <div className={"sheet" + (sheetOpen ? " open" : "")} onClick={(e) => e.stopPropagation()}>
+            <div className="grab" onClick={() => setSheetOpen(false)}>
+              <i />
+            </div>
+            <div className="tabs">
+              <button className={"tab" + (tab === "feed" ? " active" : "")} onClick={() => setTab("feed")}>
+                Feed<span className="n">{feed.length}</span>
+              </button>
+              <button className={"tab" + (tab === "board" ? " active" : "")} onClick={() => setTab("board")}>
+                Board<span className="n">{leaderboard.length}</span>
+              </button>
+              <button className={"tab" + (tab === "quests" ? " active" : "")} onClick={() => setTab("quests")}>
+                Quests<span className="n">{challenges.length}</span>
+              </button>
+            </div>
+            <div className="sheet-body">
+              {beerrealOpen && tab === "feed" && (
+                <div className="beerreal-banner">
+                  <div className="kicker">⚡ BeerReal live</div>
+                  <div style={{ fontSize: 13.5, margin: "6px 0 10px", lineHeight: 1.4 }}>
+                    {beerreal!.prompt}
+                  </div>
+                  <button className="btn primary sm" onClick={snapBeerReal}>
+                    Snap my pint
+                  </button>
+                </div>
+              )}
+              {tab === "feed" && <Feed activities={feed} />}
+              {tab === "board" && <Leaderboard rows={leaderboard} />}
+              {tab === "quests" && <Challenges challenges={challenges} />}
+            </div>
+          </div>
+        </>
+      )}
 
       {showAuth && (
         <AuthModal
@@ -278,22 +353,6 @@ export default function App() {
           </div>
         ))}
       </div>
-
-      {IS_MOCK && (
-        <div
-          style={{
-            position: "fixed",
-            bottom: 8,
-            right: 388,
-            zIndex: 30,
-            fontSize: 11,
-            color: "var(--text-faint)",
-            pointerEvents: "none",
-          }}
-        >
-          mock API · standalone demo mode
-        </div>
-      )}
     </div>
   );
 }
