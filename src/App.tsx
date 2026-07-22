@@ -23,6 +23,12 @@ interface Toast {
   gold: boolean;
 }
 
+interface SavedMapSubmission {
+  latitude: number;
+  longitude: number;
+  imageUrl: string;
+}
+
 export default function App() {
   const { user, setUser } = useSession();
   const geo = useGeolocation();
@@ -73,6 +79,32 @@ export default function App() {
       const [p, s] = await Promise.all([api.listPubs(), api.getScores()]);
       setPubs(p);
       setScores(s);
+      try {
+        const response = await fetch("/api/map/submissions?limit=100");
+        if (!response.ok) return;
+        const body = (await response.json()) as { submissions: SavedMapSubmission[] };
+        const savedPhotos: Record<string, string> = {};
+        for (const submission of body.submissions) {
+          const location = {
+            lat: submission.latitude,
+            lon: submission.longitude,
+          };
+          const nearest = [...p].sort(
+            (a, b) =>
+              distanceMeters(location, a) - distanceMeters(location, b),
+          )[0];
+          if (
+            nearest &&
+            savedPhotos[nearest.id] === undefined &&
+            distanceMeters(location, nearest) < 250
+          ) {
+            savedPhotos[nearest.id] = submission.imageUrl;
+          }
+        }
+        setPhotos(savedPhotos);
+      } catch {
+        // The seeded map remains usable when the local Worker is offline.
+      }
     })();
     void refreshGamification();
   }, [refreshGamification]);

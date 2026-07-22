@@ -12,113 +12,113 @@
     {
       "id": "node/1001",
       "name": "Pensão Amor",
-      "lat": 38.70722,
-      "lon": -9.14562,
+      "lat": 38.7073101,
+      "lon": -9.1435351,
       "address": "R. do Alecrim 19, Cais do Sodré",
       "osm_raw": { "amenity": "bar", "name": "Pensão Amor", "addr:street": "Rua do Alecrim" }
     },
     {
       "id": "node/1002",
       "name": "Pistola y Corazón",
-      "lat": 38.70801,
-      "lon": -9.14631,
+      "lat": 38.7087051,
+      "lon": -9.1476792,
       "address": "R. da Boavista 16, Cais do Sodré",
       "osm_raw": { "amenity": "bar", "name": "Pistola y Corazón" }
     },
     {
       "id": "node/1003",
       "name": "O Bom O Mau e O Vilão",
-      "lat": 38.70766,
-      "lon": -9.14498,
+      "lat": 38.7074219,
+      "lon": -9.143548,
       "address": "R. do Alecrim 21, Cais do Sodré",
       "osm_raw": { "amenity": "bar", "name": "O Bom O Mau e O Vilão" }
     },
     {
       "id": "node/1004",
       "name": "Sol e Pesca",
-      "lat": 38.70744,
-      "lon": -9.14607,
+      "lat": 38.7072887,
+      "lon": -9.1438049,
       "address": "R. Nova do Carvalho 44, Cais do Sodré",
       "osm_raw": { "amenity": "bar", "name": "Sol e Pesca" }
     },
     {
       "id": "node/1005",
       "name": "Musicbox Lisboa",
-      "lat": 38.70712,
-      "lon": -9.14555,
+      "lat": 38.7071669,
+      "lon": -9.1434342,
       "address": "R. Nova do Carvalho 24, Cais do Sodré",
       "osm_raw": { "amenity": "bar", "name": "Musicbox", "live_music": "yes" }
     },
     {
       "id": "node/1006",
       "name": "Bicaense",
-      "lat": 38.70998,
-      "lon": -9.14712,
+      "lat": 38.7100003,
+      "lon": -9.1451806,
       "address": "R. da Bica de Duarte Belo 42A, Bica",
       "osm_raw": { "amenity": "bar", "name": "Bicaense" }
     },
     {
       "id": "node/1007",
       "name": "Park Bar",
-      "lat": 38.71046,
-      "lon": -9.14803,
+      "lat": 38.7111966,
+      "lon": -9.1476098,
       "address": "Calç. do Combro 58 (rooftop), Bairro Alto",
       "osm_raw": { "amenity": "bar", "name": "Park", "rooftop": "yes" }
     },
     {
       "id": "node/1008",
       "name": "The George — English Pub",
-      "lat": 38.71123,
-      "lon": -9.14456,
+      "lat": 38.7118939,
+      "lon": -9.1437384,
       "address": "R. do Norte 92, Bairro Alto",
       "osm_raw": { "amenity": "pub", "name": "The George", "cuisine": "british" }
     },
     {
       "id": "node/1009",
       "name": "BA Wine Bar do Bairro Alto",
-      "lat": 38.71201,
-      "lon": -9.14512,
+      "lat": 38.7124894,
+      "lon": -9.1453885,
       "address": "R. da Rosa 107, Bairro Alto",
       "osm_raw": { "amenity": "bar", "name": "BA Wine Bar", "drink:wine": "yes" }
     },
     {
       "id": "node/1010",
       "name": "Artis — Bar de Vinhos",
-      "lat": 38.71165,
-      "lon": -9.14603,
+      "lat": 38.712475,
+      "lon": -9.1437795,
       "address": "R. do Diário de Notícias 95, Bairro Alto",
       "osm_raw": { "amenity": "bar", "name": "Artis" }
     },
     {
       "id": "node/1011",
       "name": "Cervejaria Trindade",
-      "lat": 38.71089,
-      "lon": -9.14201,
+      "lat": 38.7124453,
+      "lon": -9.1424116,
       "address": "R. Nova da Trindade 20C, Chiado",
       "osm_raw": { "amenity": "pub", "name": "Cervejaria Trindade", "microbrewery": "no" }
     },
     {
       "id": "node/1012",
       "name": "Duque Brewpub",
-      "lat": 38.71012,
-      "lon": -9.14098,
+      "lat": 38.7131412,
+      "lon": -9.142505,
       "address": "Calç. do Duque 49, Chiado",
       "osm_raw": { "amenity": "pub", "name": "Duque Brewpub", "microbrewery": "yes" }
     },
     {
       "id": "node/1013",
       "name": "Quimera Brewpub",
-      "lat": 38.70689,
-      "lon": -9.15012,
+      "lat": 38.7055325,
+      "lon": -9.1709254,
       "address": "R. Prior do Crato 6, Alcântara",
       "osm_raw": { "amenity": "pub", "name": "Quimera Brewpub", "microbrewery": "yes" }
     },
     {
       "id": "node/1014",
       "name": "Crafty Corner",
-      "lat": 38.71322,
-      "lon": -9.14367,
-      "address": "R. da Misericórdia 14, Príncipe Real",
+      "lat": 38.7094794,
+      "lon": -9.1318481,
+      "address": "R. de São João da Praça 95, Alfama",
       "osm_raw": { "amenity": "pub", "name": "Crafty Corner", "cuisine": "craft_beer" }
     }
   ]

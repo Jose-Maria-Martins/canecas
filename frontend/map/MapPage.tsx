@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import "leaflet/dist/leaflet.css";
 import { fetchMapSubmissions } from "./api";
+import { DEMO_SUBMISSIONS } from "./demo";
 import "./map.css";
 import { SubmissionMap } from "./SubmissionMap";
 import type { MapSubmission } from "./types";
@@ -39,6 +40,9 @@ export function MapPage() {
     };
   }, []);
 
+  const showingDemo = !loading && !error && submissions.length === 0;
+  const displaySubmissions = showingDemo ? DEMO_SUBMISSIONS : submissions;
+
   return (
     <main className="map-page">
       <header className="map-header">
@@ -51,20 +55,15 @@ export function MapPage() {
       </header>
 
       <section className="map-stage" aria-label="Map of rated beer photos">
-        <SubmissionMap submissions={submissions} />
+        <SubmissionMap submissions={displaySubmissions} />
         <div className="map-count" aria-live="polite">
-          <strong>{submissions.length.toString().padStart(2, "0")}</strong>
-          <span>rated pints<br />on the map</span>
+          <strong>{displaySubmissions.length.toString().padStart(2, "0")}</strong>
+          <span>{showingDemo ? "sample pints" : "rated pints"}<br />on the map</span>
         </div>
         {loading && <p className="map-notice">Finding the latest round...</p>}
         {!loading && error && <p className="map-notice map-notice-error">{error}</p>}
-        {!loading && !error && submissions.length === 0 && (
-          <div className="map-empty">
-            <span>First round?</span>
-            <strong>No location-tagged pints yet.</strong>
-            <p>Rate a beer and allow location access to put it on the map.</p>
-            <a href="/">Open the camera</a>
-          </div>
+        {showingDemo && (
+          <p className="map-notice">Showing sample pints — rate a beer to add your own.</p>
         )}
       </section>
     </main>

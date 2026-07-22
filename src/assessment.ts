@@ -2,15 +2,27 @@ import type { PhotoAssessment, SupportedImageType } from "./worker-types";
 
 export const MAX_UPLOAD_BYTES = 5 * 1024 * 1024;
 
-export const ASSESSMENT_PROMPT = `Analyze this photo and return only a JSON object with four keys:
+export const ASSESSMENT_PROMPT = `Analyze this photo and return only a JSON object with these keys:
 - isImage: boolean
 - isBeer: boolean
-- score: a number from 0 to 5 when beer is visible, otherwise null
+- head: poor, fair, good, or excellent
+- pour: poor, fair, good, or excellent
+- glass: poor, fair, good, or excellent
+- colour: poor, fair, good, or excellent
+- presentation: poor, fair, good, or excellent
 - reason: one short sentence describing what you actually see
 
-Judge the beer's visual appeal from its pour, head, glass, colour, and setting. Do not repeat these instructions and do not use markdown.`;
+If beer is visible, grade every visual category independently from the image. Use the full range when justified and do not give an overall numeric score. If no beer is visible, the category values may be null. Do not repeat these instructions and do not use markdown.`;
 
-export const ASSESSMENT_RETRY_PROMPT = `Analyze the photo again. Return only valid JSON with isImage and isBeer booleans, a numeric score from 0 to 5 when beer is visible, and a short reason based on the photo. Do not copy the instructions or use placeholder values.`;
+export const ASSESSMENT_RETRY_PROMPT = `Inspect the attached photo again and return only valid JSON. Include isImage and isBeer booleans; independent poor, fair, good, or excellent grades for head, pour, glass, colour, and presentation; and a short reason based on visible evidence. Do not include an overall score, copy instructions, or use placeholder values.`;
+
+const RUBRIC_KEYS = ["head", "pour", "glass", "colour", "presentation"] as const;
+const GRADE_SCORES: Record<string, number> = {
+  poor: 1,
+  fair: 2.4,
+  good: 3.7,
+  excellent: 4.8,
+};
 
 export function detectImageType(bytes: Uint8Array): SupportedImageType | null {
   if (
@@ -88,8 +100,11 @@ export function parseAssessmentResponse(value: unknown): PhotoAssessment {
     };
   }
 
-  let score =
-    typeof parsed.score === "number"
+  const rubricGrades = RUBRIC_KEYS.map((key) => parsed[key]);
+  const hasRubric = rubricGrades.every((grade) => typeof grade === "string");
+  let score = hasRubric
+    ? scoreRubric(parsed)
+    : typeof parsed.score === "number"
       ? parsed.score
       : typeof parsed.score === "string"
         ? Number.parseFloat(parsed.score)
@@ -109,6 +124,19 @@ export function parseAssessmentResponse(value: unknown): PhotoAssessment {
     score: Math.round(score * 10) / 10,
     reason: reason.slice(0, 280),
   };
+}
+
+function scoreRubric(parsed: Record<string, unknown>): number {
+  let total = 0;
+  for (const key of RUBRIC_KEYS) {
+    const grade = String(parsed[key]).trim().toLowerCase();
+    const value = GRADE_SCORES[grade];
+    if (value === undefined) {
+      throw new Error(`Workers AI returned an invalid ${key} grade`);
+    }
+    total += value;
+  }
+  return total / RUBRIC_KEYS.length;
 }
 
 function extractResponse(value: unknown): unknown {
