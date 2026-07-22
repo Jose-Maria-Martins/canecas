@@ -1,0 +1,21 @@
+TASKS.md
+  s_9c9aa10bf5b27c::t_6c31150b4f3e70 233-240,635-708
+spec.md
+  s_9c9aa10bf5b27c::t_b16d76efe86fad 1-253
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "10e6d3100a418eb71ddff4dc21371c6d267293b6",
+  "prompts": {},
+  "sessions": {
+    "s_9c9aa10bf5b27c": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_07549bc55ffe2QBxOfIwnI5iRJ",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Joana Azevedo <jazevedo@cloudflare.com>"
+    }
+  }
+}
