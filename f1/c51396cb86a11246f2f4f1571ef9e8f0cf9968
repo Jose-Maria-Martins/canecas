@@ -1,0 +1,21 @@
+package-lock.json
+  s_9c9aa10bf5b27c::t_b7b902ab012b61 1-2149
+package.json
+  s_9c9aa10bf5b27c::t_9f3b4ceeb205f3 1-28
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "f1c51396cb86a11246f2f4f1571ef9e8f0cf9968",
+  "prompts": {},
+  "sessions": {
+    "s_9c9aa10bf5b27c": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_07549bc55ffe2QBxOfIwnI5iRJ",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Joana Azevedo <jazevedo@cloudflare.com>"
+    }
+  }
+}
