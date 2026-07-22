@@ -107,13 +107,15 @@ export function MapView(props: Props) {
       const el = document.createElement("div");
       el.className = "ppin";
       el.innerHTML = `
-        <div class="plabel"><div class="nm"></div><div class="sub"></div></div>
-        <div class="bubble">
-          <img class="thumb" loading="lazy" alt="" />
-          <div class="fallback"></div>
-          <div class="badge"><span class="star">★</span><span class="val"></span></div>
-        </div>
-        <div class="stem"></div>`;
+        <div class="pin-visual">
+          <div class="plabel"><div class="nm"></div><div class="sub"></div></div>
+          <div class="bubble">
+            <img class="thumb" loading="lazy" alt="" />
+            <div class="fallback"></div>
+            <div class="badge"><span class="star">★</span><span class="val"></span></div>
+          </div>
+          <div class="stem"></div>
+        </div>`;
       const thumb = el.querySelector<HTMLImageElement>(".thumb")!;
       const bubble = el.querySelector<HTMLDivElement>(".bubble")!;
       const fallback = el.querySelector<HTMLDivElement>(".fallback")!;
