@@ -304,11 +304,10 @@ export class MockClient implements ApiClient {
     latitude: number;
     longitude: number;
   }): Promise<PhotoAccepted> {
-    if (!this.user) throw new Error("Sign in to submit a photo");
     const id = await uploadPhoto(input);
     const submission: Submission = {
       id,
-      user_id: this.user.id,
+      user_id: this.user?.id ?? "guest",
       pub_id: input.pubId,
       photo_url: URL.createObjectURL(input.file), // stand-in for the signed R2 URL
       rating: null, // pending until "AI" runs

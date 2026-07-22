@@ -357,6 +357,25 @@ button {
 .fab:hover {
   background: var(--panel-solid);
 }
+.rate-fab {
+  background: var(--neon);
+  border-color: var(--neon);
+  color: #07140b;
+  padding: 14px 21px;
+  font-size: 16px;
+  font-weight: 800;
+  box-shadow: 0 8px 28px rgba(56, 224, 123, 0.35);
+}
+.rate-fab:hover {
+  background: #67ee96;
+}
+.demo-access {
+  color: var(--neon);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
 
 /* ---- pub panel (floating card) ----------------------------------------- */
 

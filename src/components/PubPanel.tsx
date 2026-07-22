@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import type { Pub, PubScore, User } from "../types";
+import type { Pub, PubScore } from "../types";
 import { api } from "../api/client";
 import { stars } from "./scoreColor";
 
@@ -7,9 +7,7 @@ interface Props {
   pub: Pub;
   score: PubScore | undefined;
   scoreBumped: boolean;
-  user: User | null;
   onClose: () => void;
-  onRequireAuth: () => void;
   onToast: (msg: string, gold?: boolean) => void;
 }
 
@@ -20,7 +18,7 @@ type UploadState =
   | { phase: "rating"; preview: string; submissionId: string }
   | { phase: "done"; preview: string; rating: number };
 
-export function PubPanel({ pub, score, scoreBumped, user, onClose, onRequireAuth, onToast }: Props) {
+export function PubPanel({ pub, score, scoreBumped, onClose, onToast }: Props) {
   const [upload, setUpload] = useState<UploadState>({ phase: "idle" });
   const [err, setErr] = useState<string | null>(null);
   const fileInput = useRef<HTMLInputElement | null>(null);
@@ -44,7 +42,6 @@ export function PubPanel({ pub, score, scoreBumped, user, onClose, onRequireAuth
 
   async function submit() {
     if (upload.phase !== "ready") return;
-    if (!user) return onRequireAuth();
     const preview = upload.preview;
     setUpload({ phase: "submitting", preview });
     setErr(null);
@@ -69,7 +66,7 @@ export function PubPanel({ pub, score, scoreBumped, user, onClose, onRequireAuth
         const sub = await api.getSubmission(id);
         if (sub.rating != null) {
           setUpload({ phase: "done", preview, rating: sub.rating });
-          onToast(`AI vibe rating: ${sub.rating.toFixed(1)} ★  ·  +30 XP`, true);
+          onToast(`AI vibe rating: ${sub.rating.toFixed(1)} ★`, true);
           return;
         }
       } catch {
@@ -153,15 +150,9 @@ export function PubPanel({ pub, score, scoreBumped, user, onClose, onRequireAuth
               onChange={(e) => pickFile(e.target.files?.[0])}
             />
 
-            {user ? (
-              upload.phase === "ready" && (
-                <button className="btn primary" onClick={submit}>
-                  Rate my beer ✨
-                </button>
-              )
-            ) : (
-              <button className="btn primary" onClick={onRequireAuth}>
-                Sign in to rate your beer
+            {upload.phase === "ready" && (
+              <button className="btn primary" onClick={submit}>
+                Rate my beer ✨
               </button>
             )}
           </>

@@ -12,7 +12,6 @@ import { Feed } from "./components/Feed";
 import { Leaderboard } from "./components/Leaderboard";
 import { Challenges } from "./components/Challenges";
 import { XpBar } from "./components/XpBar";
-import { AuthModal } from "./components/AuthModal";
 import { BeerRealModal } from "./components/BeerRealModal";
 
 type Tab = "feed" | "board" | "quests";
@@ -23,7 +22,7 @@ interface Toast {
 }
 
 export default function App() {
-  const { user, setUser, logout } = useSession();
+  const { user, setUser } = useSession();
   const geo = useGeolocation();
 
   const [pubs, setPubs] = useState<Pub[]>([]);
@@ -37,7 +36,6 @@ export default function App() {
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [challenges, setChallenges] = useState<Challenge[]>([]);
 
-  const [showAuth, setShowAuth] = useState(false);
   const [beerreal, setBeerreal] = useState<BeerRealPrompt | null>(null);
   const [beerrealDismissed, setBeerrealDismissed] = useState<string | null>(null);
 
@@ -152,6 +150,13 @@ export default function App() {
     }
   }
 
+  function openPhotoUpload() {
+    const target = geo.coords
+      ? [...pubs].sort((a, b) => distanceMeters(geo.coords!, a) - distanceMeters(geo.coords!, b))[0]
+      : pubs[0];
+    if (target) selectPub(target.id);
+  }
+
   function onToastAndRefresh(msg: string, gold = false) {
     pushToast(msg, gold);
     void refreshGamification();
@@ -189,20 +194,16 @@ export default function App() {
           </div>
           <div className="spacer" />
           {user ? (
-            <>
-              <XpBar user={user} />
-              <button className="btn ghost sm" onClick={() => void logout()}>
-                Sign out
-              </button>
-            </>
+            <XpBar user={user} />
           ) : (
-            <button className="btn primary" onClick={() => setShowAuth(true)}>
-              Sign in
-            </button>
+            <span className="demo-access">Open demo</span>
           )}
         </div>
 
         <div className="map-fabs">
+          <button className="fab rate-fab" onClick={openPhotoUpload} disabled={pubs.length === 0}>
+            📸 Rate a pint
+          </button>
           <button className="fab" onClick={() => void nearMe()} disabled={geo.loading}>
             📍 {geo.loading ? "Locating…" : "Pubs near me"}
           </button>
@@ -213,9 +214,7 @@ export default function App() {
             pub={selectedPub}
             score={scores[selectedPub.id]}
             scoreBumped={bumped}
-            user={user}
             onClose={() => setSelectedId(null)}
-            onRequireAuth={() => setShowAuth(true)}
             onToast={onToastAndRefresh}
           />
         )}
@@ -250,18 +249,6 @@ export default function App() {
           {tab === "quests" && <Challenges challenges={challenges} />}
         </div>
       </aside>
-
-      {showAuth && (
-        <AuthModal
-          onClose={() => setShowAuth(false)}
-          onAuthed={(u) => {
-            setUser(u);
-            setShowAuth(false);
-            pushToast(`Welcome, ${u.display_name}! 🍻`, true);
-            void refreshGamification();
-          }}
-        />
-      )}
 
       {user && beerrealOpen && (
         <BeerRealModal
