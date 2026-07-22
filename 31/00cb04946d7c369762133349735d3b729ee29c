@@ -1,0 +1,25 @@
+migrations/0003_seed_more_cities.sql
+  s_9d73e125fe5565::t_d7a0db08e661f4 1-73
+package-lock.json
+  s_9d73e125fe5565::t_ec222f6c4a2741 11,2390-2398
+package.json
+  s_9d73e125fe5565::t_fe69f38d1bd35a 29
+src/data/pubs.seed.json
+  s_9d73e125fe5565::t_d396994a32c788 4,8,251-738
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "3100cb04946d7c369762133349735d3b729ee29c",
+  "prompts": {},
+  "sessions": {
+    "s_9d73e125fe5565": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_074cc52deffeY4XIKd1jfl6Gtm",
+        "model": "claude-sonnet-5"
+      },
+      "human_author": "ddacruz <ddacruz@cloudflare.com>"
+    }
+  }
+}
